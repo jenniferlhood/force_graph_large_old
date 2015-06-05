@@ -61,7 +61,7 @@ class PgmeMain(object):
 
         #State switch: Used to communicate board state to user 
         # 0 for normal; 1 to save, 2 for load screen,
-        # 3 for load msg, 4 for morph mode
+        # 3 for load msg, 4 for force embed
         self.state = 0 
         self.timer = 0
         
@@ -82,7 +82,7 @@ class PgmeMain(object):
         self.a_list1 = []
         
         
-        # selected vertices 
+         
 
         self.selected_index = None
         self.move_vertex = False
@@ -90,11 +90,8 @@ class PgmeMain(object):
         
         self.symbol = []
         self.wells = {}
-        self.morph_time = 5 #time it takes to animate the morph
 
         self.zoom_list=0
-
-
 
         #after variable initialization, run the main program loop
         self.event_loop()
@@ -331,8 +328,7 @@ class PgmeMain(object):
                                 
                                 
                                 self.selected_index = None
-                                # after adding edges to g1 graphs are no longer similar,
-                                # so morphing cannot occur.                                
+                                           
                             
                             else:
                                 self.selected_index = None
