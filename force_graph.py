@@ -1,13 +1,14 @@
 from __future__ import division
 import sys
-import math 
+#import math 
 import pygame
 import time
 import glob
-import random
 
+from random import randrange
 from math import sqrt
-
+from math import log
+from collections import Counter
 
 
 # colour globals
@@ -36,8 +37,8 @@ class PgmeMain(object):
     def __init__(self):
 
         pygame.init()
-        self.width = 1600
-        self.height = 1200
+        self.width = 1700
+        self.height = 1100
         self.screen = pygame.display.set_mode((self.width, self.height))
     
         self.FPS = 30
@@ -86,8 +87,9 @@ class PgmeMain(object):
         self.selected_index = None
         self.move_vertex = False
 
-        #morph varbales
-        self.morph = False #morph mode switch    
+        
+        self.symbol = []
+        self.wells = {}
         self.morph_time = 5 #time it takes to animate the morph
 
         self.zoom_list=0
@@ -166,17 +168,26 @@ class PgmeMain(object):
     
    
         f4 = f.readline()
-        if f4 != "":
-           # print "yes"
-           pass
-        else:
-            print "no"
-            pass
+
         self.zoom_list=0  
         self.timer = time.time()
         self.state = 3
         
-
+        
+        
+        
+        
+        #code specific to tictactoe files
+        if len(self.v_list1) == 765:
+            f = open('tictactoe.txt')
+            symbol = []
+            for i in range(765):
+                a = f.readline()
+                a= a.rstrip('\r\n')
+                self.symbol.append(a)
+        
+            self.reorder()
+    
 
     # Main Event handling method
     #
@@ -399,6 +410,7 @@ class PgmeMain(object):
                 # Draw the interface 
                 
                 self.draw()
+                print "ok"
                 
                 if self.state == 4:
                     self.force()
@@ -412,7 +424,27 @@ class PgmeMain(object):
     def deg(self,v):
         return len(self.a_list1[self.v_list1.index(v)])
         
+    def reorder(self):
+
+        for i in range(len(self.v_list1)):
+            c=Counter()
             
+            for j in self.symbol[i]:
+                c[j]+=1
+            
+            block = (10-c['-'])/10
+            
+            if (10-c['-']) not in self.wells:
+                self.wells[10-c['-']] = 1
+            else:
+                self.wells[10-c['-']] += 1
+                
+            print self.wells         
+            y = int((self.height-50)*(block)-(self.height-50)/20)
+            x = int(randrange(self.width/4,3*self.width/4))
+            
+            
+            self.v_list1[i].xy=(x,y) 
                
     def force(self):
         print  time.time() - self.timer            
@@ -421,11 +453,11 @@ class PgmeMain(object):
                 
                 
         n = max(1,len(self.v_list1))
-        K = int((math.sqrt((self.width*self.height)/n))*(1/2))
+        K = int((sqrt((self.width*self.height)/n))*(1/2))
             
        
-        spring = 1/8
-        temp = 1/20 #the "temperature" of the repulsive force. 
+        spring = 1/20
+        temp = 2 #the "temperature" of the repulsive force. 
         
         disp_list = []
         vx = 0
@@ -457,7 +489,7 @@ class PgmeMain(object):
                     # disp_y = K - abs(i.xy[1]-j.xy[1])
 
                     fx_a += int(spring*(nx*disp**2/K)*(disp/max(1,abs(disp))))
-                    fy_a += int(spring*(ny*disp**2/K)*(disp/max(1,abs(disp))))
+                    #fy_a += int(spring*(ny*disp**2/K)*(disp/max(1,abs(disp))))
                     
                                        
                     #print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,disp,fx_a)
@@ -469,7 +501,7 @@ class PgmeMain(object):
             #proximity to other vertices
             
             
-            
+             
             for j in self.v_list1:
                 if i is not j:
                     (vx, vy) = (i.xy[0]-j.xy[0]), (i.xy[1]-j.xy[1])
@@ -484,9 +516,12 @@ class PgmeMain(object):
                         fx_r += temp*int(nx * (K**2)/d)
                         fy_r += temp*int(ny * (K**2)/d)
                # print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,d,fx_r)
-            
+       
             
             # wall repusion (similar to vertices repulsion)
+            
+            
+            
             fx_w = 0
             fy_w = 0
             
@@ -495,16 +530,16 @@ class PgmeMain(object):
                         
             if d != 0:
                 nx = 1
-                fx_w +=  temp*int(nx * (K**2)/d)
+                fx_w +=  int(nx * (K**2)/d)
                         
             # right direction
             d = vx = i.xy[0]-(self.width-10)
                         
             if d != 0:
                 nx = 1
-                fx_w +=  temp*int(nx * (K**2)/d)
+                fx_w +=  int(nx * (K**2)/d)
 
-
+            """
             # top 
             d = vy = i.xy[1] - 10
                         
@@ -519,18 +554,100 @@ class PgmeMain(object):
                 ny = 1
                 fy_w +=  temp*int(ny * (K**2)/d)
             
-                 
+           
+            """
+            
+               
+#            disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
+#                            +fx_w*(2/self.FPS)),\
+#                    int(i.xy[1]+fy_a*(2/self.FPS)+fy_r*(2/self.FPS)\
+#                            +fy_w*(2/self.FPS))))
+            
+            
+            fx_r=0
+            
             disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
-                            +fx_w*(2/self.FPS)),\
-                    int(i.xy[1]+fy_a*(2/self.FPS)+fy_r*(2/self.FPS)\
-                            +fy_w*(2/self.FPS))))
+                            +fx_w*(2/self.FPS)), i.xy[1]))
              
         #update vertex positions
         for i in range(len(self.v_list1)):
             self.v_list1[i].xy = disp_list[i]
             
-   
+            
+    def walls2(self,v,temp,K):
+        fx_w = 0
+        
+        for i in self.wells:
+            for j in range(self.wells[i]):
+                block = (self.width*j/self.wells[i], self.width*(j+1)/self.wells[i])
+                # left direction
+                d = vx = v.xy[0]-block[0]
+                    
+                if d != 0:
+                    fx_w +=  temp*int(K**2*log(abs(d)))
+                        
+                # right direction
+                d = vx = v.xy[0]-block[1]
+                        
+                if d != 0:
+                    fx_w +=  temp*int(K**2*log(abs(d)))
+        return fx_w
       
+    
+    
+    
+    def walls1(self,v,temp,K):
+        fx_w = 0
+        fy_w = 0
+        
+        if len(self.v_list1) == 765:
+            walls = 10
+        else:
+            wall = 1 
+       
+        
+        for i in range(walls):
+            block = (i/walls*(self.height-50), (i+1)/walls*(self.height-50))
+        
+            # left direction
+            d = vx = v.xy[0]-10
+                        
+            if d != 0:
+                fx_w +=  2*temp*int(K**2/d)
+                        
+            # right direction
+            d = vx = v.xy[0]-(self.width-10)
+                        
+            if d != 0:
+                fx_w +=  2*temp*int(K**2/d)
+
+            # top 
+            d = vy = v.xy[1] - (block[0]+10)
+                        
+            if d != 0:
+                fy_w +=  2*temp*int(K**2/d)
+            
+            # bottom 
+            d = vy = v.xy[1]- (block[1]-10)
+                        
+            if d != 0:
+                fy_w +=  2*temp*int(K**2/d)
+      
+        return (fx_w,fy_w)
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
     def state_msg(self,msg):
         #messages to user regarding program state
             
@@ -692,11 +809,8 @@ class PgmeMain(object):
     def draw(self):
         self.screen.fill((0,0,0))
         self.draw_board()
-
-        if self.morph:
-            self.draw_morph()
-        else:
-            self.draw_graphs()        
+       
+        self.draw_graphs()        
         
         self.draw_messages()
     
