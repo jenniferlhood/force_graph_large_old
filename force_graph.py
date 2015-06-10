@@ -8,6 +8,8 @@ import glob
 from random import randrange
 from math import sqrt
 from math import log
+from math import atan
+from math import sin
 from collections import Counter
 
 
@@ -31,7 +33,7 @@ c_list= [(100,226,240),(80,209,230),(60,189,219),\
 class Vertex(object):
     def __init__(self,(x,y)):
         self.xy = (x,y)
-        self.symbol = []
+        self.win = "-"
         
 class PgmeMain(object):
     def __init__(self):
@@ -41,7 +43,7 @@ class PgmeMain(object):
         self.height = 1100
         self.screen = pygame.display.set_mode((self.width, self.height))
     
-        self.FPS = 30
+        self.FPS = 5
         self.REFRESH = pygame.USEREVENT+1
         pygame.time.set_timer(self.REFRESH, 1000//self.FPS)
 
@@ -90,7 +92,9 @@ class PgmeMain(object):
         
         self.symbol = []
         self.wells = {}
-
+        self.win = []
+        
+        self.count_force = 0
         self.zoom_list=0
 
         #after variable initialization, run the main program loop
@@ -184,8 +188,23 @@ class PgmeMain(object):
                 self.symbol.append(a)
         
             self.reorder()
-    
-
+            self.win_loose_draw()
+            self.minimax(self.v_list1[0], True)
+            
+            
+            ind = self.symbol.index("X-O---OXX")
+            
+            print "board {}, win {}".format(self.symbol[ind], self.v_list1[ind].win)
+            for i in self.a_list1[ind]:
+                if self.moves(i) < self.moves(self.v_list1[ind]):
+                    children = []
+                    for j in self.a_list1[self.v_list1.index(i)]:
+                        if self.moves(j) < self.moves(i):
+                            children.append(j)
+                    print "board {}, win {}, children {}".format(self.symbol[self.v_list1.index(i)], i.win,len(children))
+                    
+            
+           
     # Main Event handling method
     #
     #
@@ -354,7 +373,7 @@ class PgmeMain(object):
                     
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
             
-                    print self.zoom_list
+                    
                     if self.zoom_list < 2:
                         for i in self.v_list1:
                             x= i.xy[0]
@@ -367,7 +386,7 @@ class PgmeMain(object):
                             
                             
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_o:
-                    print self.zoom_list
+                   
                     if self.zoom_list > -2:
                         for i in self.v_list1:
                             x= i.xy[0]
@@ -406,11 +425,15 @@ class PgmeMain(object):
                 # Draw the interface 
                 
                 self.draw()
-                print "ok"
+               
                 
                 if self.state == 4:
                     self.force()
-
+                    self.count_force +=1
+                else:
+                    self.count_force = 0
+                    
+                    
             else:
                 pass
     
@@ -419,7 +442,88 @@ class PgmeMain(object):
 
     def deg(self,v):
         return len(self.a_list1[self.v_list1.index(v)])
+   
+    def win_loose_draw(self):
+        #win:
+        for i in self.symbol:
         
+            if "-" not in i:
+                self.win.append("d")
+            else:    
+                if i[0:3] == "XXX" or i[3:6] == "XXX" or i[6:9] == "XXX":
+                    self.win.append("x")
+                elif i[0:3] == "OOO" or i[3:6] == "OOO" or i[6:9] == "OOO":     
+                    self.win.append("o")
+               
+                elif i[0] == "X" and i[3] == "X" and i[6] == "X":
+                        self.win.append("x")
+                elif i[0] == "X" and i[4] == "X" and i[8] == "X":
+                        self.win.append("x")     
+                elif i[2] == "X" and  i[5] == "X" and i[8] == "X":
+                        self.win.append("x")
+                elif i[2] == "X" and i[4] == "X" and i[6] == "X":
+                        self.win.append("x")
+                elif i[1] == "X" and i[4] == "X" and i[7] == "X":
+                    self.win.append("x")
+                
+
+                elif i[0] == "O" and i[3] == "O" and i[6] == "O":
+                        self.win.append("o")
+                elif i[0] == "O" and i[4] == "O" and i[8] == "O":
+                        self.win.append("o") 
+                elif i[2] == "O" and i[5] == "O" and i[8] == "O":
+                        self.win.append("o")
+                elif i[2] == "O" and i[4] == "O" and i[6] == "O":
+                        self.win.append("o")
+                elif i[1] == "O" and i[4] == "O" and i[7] == "O":
+                    self.win.append("o")                
+              
+                else:
+                    self.win.append("")
+
+     
+    def moves(self,vertex):
+        index = self.v_list1.index(vertex)
+        board = self.symbol[index]
+        
+        c=Counter()
+        for j in board:
+            c[j]+=1
+        return c['-']
+        
+        
+    #node is V in v_list, start with player X
+     
+    def minimax(self, node, player):
+        index = self.v_list1.index(node)
+        if self.win[index] == "x":
+            node.win = 1
+            return 1
+        elif self.win[index] == "o":
+            node.win = -1
+            return -1
+        elif self.win[index] == "d":  
+            node.win = 0
+            return 0
+        else:    
+            if player:
+                bestvalue = -1
+                for i in self.a_list1[index]:
+                    if self.moves(i) < self.moves(node):
+                        val = self.minimax(i, False)
+                        bestvalue = max(bestvalue, val)
+                        node.win = bestvalue
+                        #return bestvalue
+            else:
+                bestvalue = 1
+                for i in self.a_list1[index]:
+                    if self.moves(i) < self.moves(node):
+                        val = self.minimax(i, True)
+                        bestvalue = min(bestvalue, val)
+                        node.win = bestvalue
+                        #return bestvalue
+            return bestvalue         
+    
     def reorder(self):
 
         for i in range(len(self.v_list1)):
@@ -435,25 +539,26 @@ class PgmeMain(object):
             else:
                 self.wells[10-c['-']] += 1
                 
-            print self.wells         
+                 
             y = int((self.height-50)*(block)-(self.height-50)/20)
-            x = int(randrange(self.width/4,3*self.width/4))
+            x = randrange(int(15*self.width/31),int(16*self.width/31))
             
             
             self.v_list1[i].xy=(x,y) 
                
     def force(self):
         print  time.time() - self.timer            
-        if time.time() - self.timer > 60:
+        if time.time() - self.timer > 200:
                 self.state = 0
                 
                 
         n = max(1,len(self.v_list1))
-        K = int((sqrt((self.width*self.height)/n))*(1/2))
+        K = int((sqrt((self.width*self.height)/n)))
             
        
-        spring = 1/20
-        temp = 2 #the "temperature" of the repulsive force. 
+        spring = 1/15
+        temp = 1/200 #the "temperature" of the repulsive force. 
+
         
         disp_list = []
         vx = 0
@@ -485,7 +590,7 @@ class PgmeMain(object):
                     # disp_y = K - abs(i.xy[1]-j.xy[1])
 
                     fx_a += int(spring*(nx*disp**2/K)*(disp/max(1,abs(disp))))
-                    #fy_a += int(spring*(ny*disp**2/K)*(disp/max(1,abs(disp))))
+                    fy_a += int(spring*(ny*disp**2/K)*(disp/max(1,abs(disp))))
                     
                                        
                     #print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,disp,fx_a)
@@ -495,9 +600,7 @@ class PgmeMain(object):
             fy_r = 0 
             
             #proximity to other vertices
-            
-            
-             
+         
             for j in self.v_list1:
                 if i is not j:
                     (vx, vy) = (i.xy[0]-j.xy[0]), (i.xy[1]-j.xy[1])
@@ -509,8 +612,10 @@ class PgmeMain(object):
                     
                     if d != 0:
                         (nx, ny) = (vx/d, vy/d)
-                        fx_r += temp*int(nx * (K**2)/d)
-                        fy_r += temp*int(ny * (K**2)/d)
+                        fx_r += temp*int(nx * ((K)**2)/d)
+                        fy_r += (1/5)*temp*int(ny * ((K)**2)/d)
+                        
+                        
                # print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,d,fx_r)
        
             
@@ -535,7 +640,7 @@ class PgmeMain(object):
                 nx = 1
                 fx_w +=  int(nx * (K**2)/d)
 
-            """
+            
             # top 
             d = vy = i.xy[1] - 10
                         
@@ -551,8 +656,8 @@ class PgmeMain(object):
                 fy_w +=  temp*int(ny * (K**2)/d)
             
            
-            """
             
+            (fx_w,fy_w) =self.walls1(i,temp,K)
                
 #            disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
 #                            +fx_w*(2/self.FPS)),\
@@ -560,10 +665,10 @@ class PgmeMain(object):
 #                            +fy_w*(2/self.FPS))))
             
             
-            fx_r=0
-            
+      
             disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
-                            +fx_w*(2/self.FPS)), i.xy[1]))
+                            +fx_w*(2/self.FPS)), int(i.xy[1] + fy_r*(1/self.FPS)\
+                            +fy_w*(2/self.FPS))))
              
         #update vertex positions
         for i in range(len(self.v_list1)):
@@ -596,7 +701,7 @@ class PgmeMain(object):
         fx_w = 0
         fy_w = 0
         
-        if len(self.v_list1) == 765:
+        if len(self.v_list1) >= 765:
             walls = 10
         else:
             wall = 1 
@@ -609,25 +714,25 @@ class PgmeMain(object):
             d = vx = v.xy[0]-10
                         
             if d != 0:
-                fx_w +=  2*temp*int(K**2/d)
+                fx_w +=  10*temp*int(K**2/d)
                         
             # right direction
             d = vx = v.xy[0]-(self.width-10)
                         
             if d != 0:
-                fx_w +=  2*temp*int(K**2/d)
+                fx_w +=  10*temp*int(K**2/d)
 
             # top 
             d = vy = v.xy[1] - (block[0]+10)
                         
             if d != 0:
-                fy_w +=  2*temp*int(K**2/d)
+                fy_w +=  10*temp*int(K**2/d)
             
             # bottom 
             d = vy = v.xy[1]- (block[1]-10)
                         
             if d != 0:
-                fy_w +=  2*temp*int(K**2/d)
+                fy_w +=  10*temp*int(K**2/d)
       
         return (fx_w,fy_w)
 
@@ -770,7 +875,10 @@ class PgmeMain(object):
                         for j in self.a_list1[self.selected_index]:
                             pygame.draw.line(self.screen,LAV,pos,j.xy, 1)
             
-   
+                            
+    
+    
+    
     
         else:
 
@@ -780,6 +888,14 @@ class PgmeMain(object):
                 for j in self.a_list1[i]:
                     pygame.draw.line(self.screen,LAV,self.v_list1[\
                                                 i].xy,j.xy, 1)
+                                                
+                                                
+                                                
+                                                
+                   # if self.moves(j) < self.moves(self.v_list[i]):
+                    
+
+
 
 
 
