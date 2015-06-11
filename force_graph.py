@@ -235,8 +235,10 @@ class PgmeMain(object):
                 if event.button ==  1 and 10 < pos[0] < \
                                 (self.width-10) and 0 < pos[1] < self.height-20\
                                  and (self.state == 0 or self.state == 4):
-
-                    #add move vertex 
+                    
+                    
+                    """        
+                    #add vertex 
                     if self.selected_index is None:  
                         add = True
 
@@ -256,7 +258,7 @@ class PgmeMain(object):
                             self.a_list1.append([])
                     
                          
-                   
+                    """
                 elif event.button == 3 and 10 < pos[0] < \
                                 (self.width-10) and 0 < pos[1] < self.height-20\
                                 and self.state == 0:
@@ -328,7 +330,8 @@ class PgmeMain(object):
                     self.v_list1[self.selected_index].xy = pos
                     self.selected_index = None
                     self.move_vertex = False
-    
+                    
+                """
                 # connecting two vertices with an edge    
                 elif event.button == 3\
                      and 10 < pos[0] < (self.width-10) and \
@@ -359,10 +362,11 @@ class PgmeMain(object):
                             else:
                                 self.selected_index = None
                                 self.move_vertex = None
+                    
                 else:
                     self.selected_index = None
                     self.move_vertex = None
-
+                """
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
                 
                 if self.state == 0:           
@@ -552,7 +556,8 @@ class PgmeMain(object):
             
             
             self.v_list1[i].xy=(x,y) 
-               
+            
+              
     def force(self):
         print  time.time() - self.timer            
         if time.time() - self.timer > 200:
@@ -563,9 +568,9 @@ class PgmeMain(object):
         K = int((sqrt((self.width*self.height)/n)))
             
        
-        spring = 1/15
+        spring = 1/20
         temp = 1/200 #the "temperature" of the repulsive force. 
-
+        temp = 1/1000
         
         disp_list = []
         vx = 0
@@ -627,44 +632,36 @@ class PgmeMain(object):
        
             
             # wall repusion (similar to vertices repulsion)
-            
-            
-            
-            fx_w = 0
-            fy_w = 0
-            
+            nx = 1
+            fx_w = fy_w = 0
+                       
             # left direction
             d = vx = i.xy[0]-10
                         
             if d != 0:
-                nx = 1
+               
                 fx_w +=  int(nx * (K**2)/d)
                         
             # right direction
             d = vx = i.xy[0]-(self.width-10)
                         
             if d != 0:
-                nx = 1
                 fx_w +=  int(nx * (K**2)/d)
 
-            
             # top 
             d = vy = i.xy[1] - 10
                         
             if d != 0:
-                ny = 1
                 fy_w +=  temp*int(ny * (K**2)/d)
             
             # bottom 
             d = vy = i.xy[1]-(self.height-50)
                         
             if d != 0:
-                ny = 1
                 fy_w +=  temp*int(ny * (K**2)/d)
             
            
-            
-            (fx_w,fy_w) =self.walls1(i,temp,K)
+            (fx_w,fy_w) = self.walls1(i,temp,K)
                
 #            disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
 #                            +fx_w*(2/self.FPS)),\
