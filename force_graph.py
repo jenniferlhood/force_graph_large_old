@@ -181,9 +181,6 @@ class PgmeMain(object):
         self.state = 3
         
         
-        
-        
-        
         #code specific to tictactoe files
         if len(self.v_list1) == 765:
             f = open('tictactoe.txt')
@@ -195,37 +192,17 @@ class PgmeMain(object):
         
             self.reorder()
             self.win_loose_draw()
-            self.minimax(self.v_list1[0], True)
-            
-            
-            ind = self.symbol.index("X-O---OXX")
-            
-            print "board {}, win {}".format(self.symbol[ind], self.v_list1[ind].win)
-            for i in self.a_list1[ind]:
-                if self.moves(i) < self.moves(self.v_list1[ind]):
-                    children = []
-                    for j in self.a_list1[self.v_list1.index(i)]:
-                        if self.moves(j) < self.moves(i):
-                            children.append(j)
-                    print "board {}, win {}, children {}".format(self.symbol[self.v_list1.index(i)], i.win,len(children))
-                    
-            
+            self.minimax(self.v_list1[0], True)           
            
-    # Main Event handling method
-    #
-    #
+    # Main Event handling method      
     def event_loop(self):
-        
-        while True:
+         while True:
           
             event = pygame.event.wait()
 
-
-
             if event.type == pygame.QUIT:
                 sys.exit()
-
-           
+          
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
                 
@@ -295,7 +272,7 @@ class PgmeMain(object):
                     
                             if int(self.pg_num+(pos[1]-40-self.height/3)//20)\
                                                              < len(self.load_list):
-                                #######
+                               
                       
                                 select_file = self.load_list[int(self.pg_num+\
                                         (pos[1]-40-self.height/3)//20)]
@@ -306,7 +283,7 @@ class PgmeMain(object):
                     
                             if 10+int(self.pg_num+(pos[1]-40-self.height/3)//20)\
                                                                  < len(self.load_list):
-                                    #######
+                                   
 
                                 select_file = self.load_list[10+int(self.pg_num+\
                                         (pos[1]-40-self.height/3)//20)]
@@ -383,7 +360,6 @@ class PgmeMain(object):
                     self.zoom_list=0
                     
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_i:
-            
                     
                     if self.zoom_list < 2:
                         for i in self.v_list1:
@@ -444,13 +420,9 @@ class PgmeMain(object):
                 else:
                     self.count_force = 0
                     
-                    
             else:
                 pass
-    
-    
-   
-
+ 
     def deg(self,v):
         return len(self.a_list1[self.v_list1.index(v)])
    
@@ -573,15 +545,11 @@ class PgmeMain(object):
         temp = 1/1000
         
         disp_list = []
-        vx = 0
-        vy = 0
-        d = 0
+        vx = vy = d = 0
         
-
         for i in self.v_list1:
-            fx_a = 0
-            fy_a = 0
-            
+            fx_a = fy_a = 0
+                         
           
             #spring force for adjacent vertices
             for j in self.a_list1[self.v_list1.index(i)]:
@@ -608,8 +576,7 @@ class PgmeMain(object):
                     #print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,disp,fx_a)
                     #get the direction of the vector (+ or -)
          
-            fx_r = 0
-            fy_r = 0 
+            fx_r = fy_r = 0
             
             #proximity to other vertices
          
@@ -617,19 +584,12 @@ class PgmeMain(object):
                 if i is not j:
                     (vx, vy) = (i.xy[0]-j.xy[0]), (i.xy[1]-j.xy[1])
                     d = sqrt(vx**2 + vy**2)
-                    
-                    #disp = int(K - d)
-                    # unit vector from j to i  
-                    
-                    
+                  
                     if d != 0:
                         (nx, ny) = (vx/d, vy/d)
                         fx_r += temp*int(nx * ((K)**2)/d)
                         fy_r += (1/5)*temp*int(ny * ((K)**2)/d)
-                        
-                        
-               # print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,d,fx_r)
-       
+     
             
             # wall repusion (similar to vertices repulsion)
             nx = 1
