@@ -27,6 +27,8 @@ CHALK = (200,200,200)
 
 POND = (1,70,54)
 
+c_list2 = [(141,160,203),(252,141,98),(102,194,165)]
+
 c_list= [(100,226,240),(80,209,230),(60,189,219),\
             (40,169,207),(20,144,192),(10,129,138),(5,100,80),(1,70,54)]
 
@@ -60,7 +62,11 @@ class PgmeMain(object):
         
         self.spring_msg = self.msg_font.render("Force embed",True,CHALK)
         
-
+        self.colour_msg1 = self.control_font.render("X wins",True, c_list2[2])
+        self.colour_msg2 = self.control_font.render("Draw",True, c_list2[1])
+        self.colour_msg3 = self.control_font.render("O wins",True, c_list2[0])
+        
+        
         #State switch: Used to communicate board state to user 
         # 0 for normal; 1 to save, 2 for load screen,
         # 3 for load msg, 4 for force embed
@@ -219,9 +225,10 @@ class PgmeMain(object):
             if event.type == pygame.QUIT:
                 sys.exit()
 
+           
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
-
+                
                 #for a left click, 
                 # add a vertex at the clicked coordinate (in the primary window)
                 # (and only when the loadfile screen isn't displayed)                
@@ -810,8 +817,17 @@ class PgmeMain(object):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width-2,self.height-40)
         
-        pygame.draw.rect(self.screen,SUN,rect_g1,4)
-       
+        pygame.draw.rect(self.screen,CHALK,rect_g1,4)
+        
+                    
+        rect = self.colour_msg1.get_rect()
+        rect = rect.move(25,25)
+        self.screen.blit(self.colour_msg1,rect)
+        rect = rect.move(0,30)
+        self.screen.blit(self.colour_msg2,rect)
+        rect = rect.move(0,30)
+        self.screen.blit(self.colour_msg3,rect)
+        
         # draw controls
         msg1 = "mouse left : add/move vertex  |  mouse right : connect vertex    "
         msg2 = "|  d : delete   |   s : save to file   |   l: load from file   "
@@ -886,14 +902,17 @@ class PgmeMain(object):
                 deg = self.deg(self.v_list1[i])
                 col = c_list[7-min(deg,7)]
                 for j in self.a_list1[i]:
-                    pygame.draw.line(self.screen,LAV,self.v_list1[\
-                                                i].xy,j.xy, 1)
+                   # pygame.draw.line(self.screen,LAV,self.v_list1[\
+                                               # i].xy,j.xy, 1)
                                                 
                                                 
                                                 
                                                 
-                   # if self.moves(j) < self.moves(self.v_list[i]):
-                    
+                    if self.moves(j) < self.moves(self.v_list1[i]):
+                        col = c_list2[j.win+1]
+                        
+                        pygame.draw.line(self.screen,col,\
+                            j.xy,self.v_list1[i].xy, 1)
 
 
 
@@ -904,14 +923,13 @@ class PgmeMain(object):
         # or draw it moving with the cursor.
         for i in self.v_list1:
             deg = self.deg(i)
-            col = c_list[7-min(deg,7)]
-            colh = (col[0]+50,col[1]+20,col[2]+10)
+            col = c_list2[i.win+1]
             
             if i is not selected_vertex:
                 pygame.draw.circle(self.screen,col,i.xy,4)
             else:
                 if self.move_vertex:
-                    pygame.draw.circle(self.screen,colh,pos,4)
+                    pygame.draw.circle(self.screen,LAV,pos,4)
                 else:
                     pygame.draw.circle(self.screen,colh,i.xy,4)
                     pygame.draw.line(self.screen,CORAL,i.xy,pos,1)
