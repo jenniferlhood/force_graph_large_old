@@ -1,17 +1,13 @@
 from __future__ import division
 import sys
-#import math 
 import pygame
 import time
 import glob
 
 from random import randrange
 from math import sqrt
-from math import log
-from math import atan
-from math import sin
 from collections import Counter
-
+from Queue import Queue
 
 # colour globals
 LAV = (100,100,200)
@@ -36,6 +32,7 @@ class Vertex(object):
     def __init__(self,(x,y)):
         self.xy = (x,y)
         self.win = "-"
+        self.locate = False
         
 class PgmeMain(object):
     def __init__(self):
@@ -89,8 +86,6 @@ class PgmeMain(object):
         # same index in the vertex list    
         self.a_list1 = []
         
-        
-         
 
         self.selected_index = None
         self.move_vertex = False
@@ -100,7 +95,6 @@ class PgmeMain(object):
         self.wells = {}
         self.win = []
         
-        self.count_force = 0
         self.zoom_list=0
 
         #after variable initialization, run the main program loop
@@ -428,9 +422,6 @@ class PgmeMain(object):
                 
                 if self.state == 4:
                     self.force()
-                    self.count_force +=1
-                else:
-                    self.count_force = 0
                     
             else:
                 pass
@@ -528,7 +519,43 @@ class PgmeMain(object):
             return bestvalue         
     
     def reorder(self):
+        q = Queue()
+        q.put(self.v_list1[0])
+        xblock = 80
+        level = 1/11
+        
+        while q.qsize() > 0:
+            
+            
+            u = q.get()
+            i = self.v_list1.index(u)
+            
+            new_level = (10-self.moves(u))/11
+              
+            if u.locate == False:    
 
+                if new_level > level:
+                    level = new_level
+                    xblock = 80
+                
+                else:
+                    xblock += 7
+
+                u.xy = (int(xblock), int(level*self.height))
+                u.locate = True
+
+
+
+            
+           # print i, q.qsize()
+            
+            for v in self.a_list1[i]:
+                if v.locate == False and self.moves(v) < self.moves(u):
+                    q.put(v)
+                
+                    
+                
+        """
         for i in range(len(self.v_list1)):
             c=Counter()
             
@@ -549,7 +576,7 @@ class PgmeMain(object):
             
             self.v_list1[i].xy=(x,y) 
             
-              
+        """     
     def force(self):
         print  time.time() - self.timer            
         if time.time() - self.timer > 200:
