@@ -203,6 +203,18 @@ class PgmeMain(object):
             if event.type == pygame.QUIT:
                 sys.exit()
           
+            elif event.type == pygame.MOUSEMOTION:
+                pos = event.pos
+                for i in range(len(self.v_list1)):
+                    u = self.v_list1[i]
+                    
+                    if (u.xy[0]-pos[0])**2 + (u.xy[1]-pos[1])**2 < 9:
+                        print "-----"
+                        print self.symbol[i][0:3]    
+                        print self.symbol[i][3:6]
+                        print self.symbol[i][6:9]        
+                    
+                           
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
                 
@@ -430,37 +442,45 @@ class PgmeMain(object):
         #win:
         for i in self.symbol:
         
-            if "-" not in i:
-                self.win.append("d")
-            else:    
-                if i[0:3] == "XXX" or i[3:6] == "XXX" or i[6:9] == "XXX":
+            #if "-" not in i:
+            #    self.win.append("d")
+            
+            
+            #else:    
+            
+            
+            if i[0:3] == "XXX" or i[3:6] == "XXX" or i[6:9] == "XXX":
+                self.win.append("x")
+            elif i[0:3] == "OOO" or i[3:6] == "OOO" or i[6:9] == "OOO":     
+                self.win.append("o")
+           
+            elif i[0] == "X" and i[3] == "X" and i[6] == "X":
                     self.win.append("x")
-                elif i[0:3] == "OOO" or i[3:6] == "OOO" or i[6:9] == "OOO":     
-                    self.win.append("o")
-               
-                elif i[0] == "X" and i[3] == "X" and i[6] == "X":
-                        self.win.append("x")
-                elif i[0] == "X" and i[4] == "X" and i[8] == "X":
-                        self.win.append("x")     
-                elif i[2] == "X" and  i[5] == "X" and i[8] == "X":
-                        self.win.append("x")
-                elif i[2] == "X" and i[4] == "X" and i[6] == "X":
-                        self.win.append("x")
-                elif i[1] == "X" and i[4] == "X" and i[7] == "X":
+            elif i[0] == "X" and i[4] == "X" and i[8] == "X":
+                    self.win.append("x")     
+            elif i[2] == "X" and  i[5] == "X" and i[8] == "X":
                     self.win.append("x")
-                
+            elif i[2] == "X" and i[4] == "X" and i[6] == "X":
+                    self.win.append("x")
+            elif i[1] == "X" and i[4] == "X" and i[7] == "X":
+                self.win.append("x")
+            
 
-                elif i[0] == "O" and i[3] == "O" and i[6] == "O":
-                        self.win.append("o")
-                elif i[0] == "O" and i[4] == "O" and i[8] == "O":
-                        self.win.append("o") 
-                elif i[2] == "O" and i[5] == "O" and i[8] == "O":
-                        self.win.append("o")
-                elif i[2] == "O" and i[4] == "O" and i[6] == "O":
-                        self.win.append("o")
-                elif i[1] == "O" and i[4] == "O" and i[7] == "O":
-                    self.win.append("o")                
-              
+            elif i[0] == "O" and i[3] == "O" and i[6] == "O":
+                    self.win.append("o")
+            elif i[0] == "O" and i[4] == "O" and i[8] == "O":
+                    self.win.append("o") 
+            elif i[2] == "O" and i[5] == "O" and i[8] == "O":
+                    self.win.append("o")
+            elif i[2] == "O" and i[4] == "O" and i[6] == "O":
+                    self.win.append("o")
+            elif i[1] == "O" and i[4] == "O" and i[7] == "O":
+                self.win.append("o")                
+          
+            else:
+            
+                if "-" not in i:
+                    self.win.append("d")
                 else:
                     self.win.append("")
 
