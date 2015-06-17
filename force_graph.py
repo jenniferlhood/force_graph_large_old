@@ -5,9 +5,10 @@ import time
 import glob
 
 from random import randrange
-from math import sqrt
+from math import sqrt,pi,sin,cos,atan
 from collections import Counter
 from Queue import Queue
+from operator import attrgetter
 
 # colour globals
 LAV = (100,100,200)
@@ -33,6 +34,8 @@ class Vertex(object):
         self.xy = (x,y)
         self.win = "-"
         self.locate = False
+        self.counter = 0
+        
         
 class PgmeMain(object):
     def __init__(self):
@@ -181,13 +184,14 @@ class PgmeMain(object):
             symbol = []
             for i in range(765):
                 a = f.readline()
-                a= a.rstrip('\r\n')
+                a = a.rstrip('\r\n')
                 self.symbol.append(a)
         
-            self.reorder()
+            
             self.win_loose_draw()
             self.minimax(self.v_list1[0], True)           
-           
+            self.reorder()
+            
     # Main Event handling method      
     def event_loop(self):
          while True:
@@ -206,7 +210,13 @@ class PgmeMain(object):
                         print "-----"
                         print self.symbol[i][0:3]    
                         print self.symbol[i][3:6]
-                        print self.symbol[i][6:9]        
+                        print self.symbol[i][6:9]   
+                        print "-----"
+                        print u.win
+                        print "====="
+                        for v in self.a_list1[i]:
+                            print v.win,
+                        print "====="     
                     
                            
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -507,7 +517,7 @@ class PgmeMain(object):
                         val = self.minimax(i, False)
                         bestvalue = max(bestvalue, val)
                         node.win = bestvalue
-                        #return bestvalue
+                        
             else:
                 bestvalue = 1
                 for i in self.a_list1[index]:
@@ -515,8 +525,10 @@ class PgmeMain(object):
                         val = self.minimax(i, True)
                         bestvalue = min(bestvalue, val)
                         node.win = bestvalue
-                        #return bestvalue
-            return bestvalue         
+                        
+            return bestvalue     
+            
+                
     
     def reorder(self):
         q = Queue()
@@ -524,33 +536,73 @@ class PgmeMain(object):
         xblock = 80
         level = 1/11
         
+        theta = 0
+        
+        
+        #set the counters
+        c=Counter()
+        c_a=Counter()
+        
+        for i in range(len(self.v_list1)):
+            u = self.v_list1[i]
+            c_a[self.moves(u)] += 1
+            
+            for v in self.a_list1[i]:
+                if self.moves(v) > self.moves(u):
+                    c[u] +=1
+                    
+            u.counter = int(c[u]/2)
+            
+            
+            
+            
         while q.qsize() > 0:
             
             
             u = q.get()
             i = self.v_list1.index(u)
             
+                                 
             new_level = (10-self.moves(u))/11
               
-            if u.locate == False:    
+            if u.locate == False: #and u.counter == 0:    
 
                 if new_level > level:
                     level = new_level
-                    xblock = 80
-                
+                    #theta = 0
+                    #xblock = 80
+                    xblock = (self.width-50)/(c_a[self.moves(u)]+1)
+                    
+                    
                 else:
-                    xblock += 7
-
+                    #xblock += 7
+                    xblock += (self.width-50)/(c_a[self.moves(u)]+1)
+                    #theta -= (pi/(c_a[self.moves(u)]+1))
+                    
+                    
+                    
+                r = (level*(self.height))
+                
                 u.xy = (int(xblock), int(level*self.height))
+               
+               
+                #if i == 0:
+                #    u.xy = (self.width/2,self.height-100)
+                #u.xy = (int(r*cos(theta)+self.width/2),int(r*sin(theta)+self.height/2))
+                
                 u.locate = True
-
-
-
+             
+            if u.counter > 0:
+                u.counter - 1
             
-           # print i, q.qsize()
+            #print i, q.qsize()
             
-            for v in self.a_list1[i]:
+            
+            #sorted(self.a_list1[i], key=attrgetter('win'))
+            
+            for v in sorted(self.a_list1[i], key=attrgetter('win')):
                 if v.locate == False and self.moves(v) < self.moves(u):
+                    
                     q.put(v)
                 
                     
@@ -576,18 +628,20 @@ class PgmeMain(object):
             
             self.v_list1[i].xy=(x,y) 
             
-        """     
+        """ 
+        
+            
     def force(self):
         print  time.time() - self.timer            
-        if time.time() - self.timer > 200:
+        if time.time() - self.timer > 50:
                 self.state = 0
                 
                 
         n = max(1,len(self.v_list1))
         K = int((sqrt((self.width*self.height)/n)))
-            
+        K=self.height/18  
        
-        spring = 1/20
+        spring = 1/30
         temp = 1/200 #the "temperature" of the repulsive force. 
         temp = 1/1000
         
@@ -600,7 +654,7 @@ class PgmeMain(object):
           
             #spring force for adjacent vertices
             for j in self.a_list1[self.v_list1.index(i)]:
-                if i is not j:
+                if i is not j and self.moves(j) <7:
                     # vector from j to i
                     (vx, vy) = (i.xy[0]-j.xy[0]), (i.xy[1]-j.xy[1])
                     d = sqrt(vx**2 + vy**2)
@@ -622,13 +676,69 @@ class PgmeMain(object):
                                        
                     #print "(vx,vy) = ({},{}), disp = {}, fx={}".format(vx, vy,disp,fx_a)
                     #get the direction of the vector (+ or -)
-         
-            fx_r = fy_r = 0
+            
+            
+            
+            """
+            ####
+            ## angular motion 1
+            n= 0
+            (ux,uy) = (0,0)
+            nf_a = 0
+            (f_ux,f_uy) = (0,0)
+            
+            (vx,vy) = (i.xy[0] - self.width/2),(i.xy[1]-self.height-100)
+            
+            #orthogonal vector:
+            if fx_a >0:
+                if fx_a/abs(fx_a) > 0:
+                    (ox,oy) = (-vx,vy)
+                else:
+                    (ox,oy) = (vx,-vy)
+            
+                n = sqrt(ox**2 + oy**2)
+
+
+                #unit vector
+                (ux, uy) = (ox/n, oy/n)
+            
+            else:
+                (ox,oy) = (0,0)
+                (ux,uy) = (0,0) 
+               
+           
+            
+            nf_a = sqrt(fx_a**2+fy_a**2)/5
+
+            (f_ux,f_uy) = (nf_a*f_ux,nf_a*uy)
+
+            ###
+            
+            
+            #angular motion 2
+            
+            (vx,vy) = (i.xy[0] - self.width/2),(i.xy[1]-self.height/2)
+            r = sqrt(vx**2 + vy**2)
+                
+                
+            if i.xy[0]+fx_a*(1/self.FPS)-self.width/2 != 0:
+                theta = atan((i.xy[1]+fy_a*(1/self.FPS)-(self.height/2))/(i.xy[0]+fx_a*(1/self.FPS)-self.width/2))
+                
+                
+                fx_a = int(r*cos(theta))
+                fy_a = int(r*sin(theta))
+                
+            else:
+                fx_a = 0
+                fx_y = 0
+    
+            """
             
             #proximity to other vertices
-         
+            (fx_r,fy_r) = (0,0)
+            
             for j in self.v_list1:
-                if i is not j:
+                if i is not j and self.moves(j) <7:
                     (vx, vy) = (i.xy[0]-j.xy[0]), (i.xy[1]-j.xy[1])
                     d = sqrt(vx**2 + vy**2)
                   
@@ -670,16 +780,22 @@ class PgmeMain(object):
            
             (fx_w,fy_w) = self.walls1(i,temp,K)
                
-#            disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
+#           disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
 #                            +fx_w*(2/self.FPS)),\
 #                    int(i.xy[1]+fy_a*(2/self.FPS)+fy_r*(2/self.FPS)\
 #                            +fy_w*(2/self.FPS))))
             
             
-      
+            
             disp_list.append((int(i.xy[0]+fx_a*(2/self.FPS)+fx_r*(2/self.FPS)\
-                            +fx_w*(2/self.FPS)), int(i.xy[1] + fy_r*(1/self.FPS)\
-                            +fy_w*(2/self.FPS))))
+                            +fx_w*(2/self.FPS)), i.xy[1]))
+            
+            
+            #disp_list.append((fx_a,fy_a))
+                            
+                            
+            
+            
              
         #update vertex positions
         for i in range(len(self.v_list1)):
@@ -879,7 +995,7 @@ class PgmeMain(object):
         # when one vertex is being moved, make sure not to draw the edges
         # until it reaches its final destination
        
-       
+        
         if self.move_vertex:
             for i in range(len(self.a_list1)):
                 deg = self.deg(self.v_list1[i])
@@ -921,7 +1037,7 @@ class PgmeMain(object):
 
 
 
-
+        
         #draw the vertices,
         # if one in the list is the selected vertex, draw it a different colour,
         # or draw it moving with the cursor.
