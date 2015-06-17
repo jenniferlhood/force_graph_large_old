@@ -35,7 +35,7 @@ class Vertex(object):
         self.win = "-"
         self.locate = False
         self.counter = 0
-        
+        self.sym = 1
         
 class PgmeMain(object):
     def __init__(self):
@@ -439,6 +439,20 @@ class PgmeMain(object):
     def deg(self,v):
         return len(self.a_list1[self.v_list1.index(v)])
    
+   
+    def symmetry(self):
+        for i in range(len(self.v_list1)):
+            u=self.v_list1[i]
+            s=self.symbol[i]
+            if s != s[6]+s[3]+s[0]+s[7]+s[4]+s[1]+s[8]+s[5]+s[2]:
+                u.sym += 1
+            if s != s[8]+s[7]+s[6]+s[5]+s[4]+s[3]+s[2]+s[1]+s[0]:
+                u.sym += 1
+            if s != s[2]+s[5]+s[8]+s[1]+s[4]+s[7]+s[0]+s[3]+s[6]:
+                u.sym += 1
+                
+                
+    
     def win_loose_draw(self):
         #win:
         for i in self.symbol:
@@ -529,7 +543,7 @@ class PgmeMain(object):
             return bestvalue     
             
                 
-    
+            
     def reorder(self):
         q = Queue()
         q.put(self.v_list1[0])
@@ -546,15 +560,15 @@ class PgmeMain(object):
         for i in range(len(self.v_list1)):
             u = self.v_list1[i]
             c_a[self.moves(u)] += 1
+         
             
             for v in self.a_list1[i]:
-                if self.moves(v) > self.moves(u):
-                    c[u] +=1
-                    
-            u.counter = int(c[u]/2)
+                    c[v] +=1
+                           
+            u.counter = c[u]
             
-            
-            
+               
+        
             
         while q.qsize() > 0:
             
@@ -571,12 +585,12 @@ class PgmeMain(object):
                     level = new_level
                     #theta = 0
                     #xblock = 80
-                    xblock = (self.width-50)/(c_a[self.moves(u)]+1)
+                    xblock = (self.width-80)/(c_a[self.moves(u)]+1)+40
                     
                     
                 else:
                     #xblock += 7
-                    xblock += (self.width-50)/(c_a[self.moves(u)]+1)
+                    xblock += (self.width-80)/(c_a[self.moves(u)]+1)
                     #theta -= (pi/(c_a[self.moves(u)]+1))
                     
                     
@@ -598,9 +612,11 @@ class PgmeMain(object):
             #print i, q.qsize()
             
             
-            #sorted(self.a_list1[i], key=attrgetter('win'))
+            #sorted(self.a_list1[i], key=attrgetter('win') )
             
-            for v in sorted(self.a_list1[i], key=attrgetter('win')):
+            for v in sorted(self.a_list1[i], key=attrgetter('counter'), reverse = (xblock > self.width/2) ):
+                
+                
                 if v.locate == False and self.moves(v) < self.moves(u):
                     
                     q.put(v)
@@ -1000,16 +1016,19 @@ class PgmeMain(object):
             for i in range(len(self.a_list1)):
                 deg = self.deg(self.v_list1[i])
                 col = c_list[7-min(deg,7)]
+               
                 
                 for j in self.a_list1[i]:
+                    s= j.sym
+                    
                     if j is not selected_vertex and self.v_list1[i]\
                                                           is not selected_vertex:
 
-                            pygame.draw.line(self.screen,LAV,self.v_list1[i].xy,j.xy, 1)
+                            pygame.draw.line(self.screen,LAV,self.v_list1[i].xy,j.xy, s)
 
                     else:
                         for j in self.a_list1[self.selected_index]:
-                            pygame.draw.line(self.screen,LAV,pos,j.xy, 1)
+                            pygame.draw.line(self.screen,LAV,pos,j.xy, s)
             
                             
     
@@ -1022,17 +1041,19 @@ class PgmeMain(object):
                 deg = self.deg(self.v_list1[i])
                 col = c_list[7-min(deg,7)]
                 for j in self.a_list1[i]:
-                   # pygame.draw.line(self.screen,LAV,self.v_list1[\
+                
+                    s= j.sym   
+                    # pygame.draw.line(self.screen,LAV,self.v_list1[\
                                                # i].xy,j.xy, 1)
                                                 
                                                 
                                                 
                                                 
                     if self.moves(j) < self.moves(self.v_list1[i]):
-                        col = c_list2[j.win+1]
+                        col = c_list2[j.win+s]
                         
                         pygame.draw.line(self.screen,col,\
-                            j.xy,self.v_list1[i].xy, 1)
+                            j.xy,self.v_list1[i].xy, s)
 
 
 
@@ -1046,12 +1067,12 @@ class PgmeMain(object):
             col = c_list2[i.win+1]
             
             if i is not selected_vertex:
-                pygame.draw.circle(self.screen,col,i.xy,4)
+                pygame.draw.circle(self.screen,col,i.xy,i.counter+2)
             else:
                 if self.move_vertex:
-                    pygame.draw.circle(self.screen,LAV,pos,4)
+                    pygame.draw.circle(self.screen,LAV,pos,i.counter+2)
                 else:
-                    pygame.draw.circle(self.screen,colh,i.xy,4)
+                    pygame.draw.circle(self.screen,colh,i.xy,i.counter+2)
                     pygame.draw.line(self.screen,CORAL,i.xy,pos,1)
                     
 
