@@ -24,6 +24,8 @@ CHALK = (200,200,200)
 
 POND = (1,70,54)
 
+c_list3 = [(43,140,190),(222,45,38),(49,163,84),(166,189,219),(252,146,114),(173,221,142)]
+
 c_list2 = [(141,160,203),(252,141,98),(102,194,165)]
 
 c_list= [(100,226,240),(80,209,230),(60,189,219),\
@@ -34,8 +36,9 @@ class Vertex(object):
         self.xy = (x,y)
         self.win = "-"
         self.locate = False
-        self.counter = 0
-        self.sym = 1
+        self.parent = 0
+        self.child = 0
+        
         
 class PgmeMain(object):
     def __init__(self):
@@ -45,7 +48,7 @@ class PgmeMain(object):
         self.height = 1100
         self.screen = pygame.display.set_mode((self.width, self.height))
     
-        self.FPS = 5
+        self.FPS = 30
         self.REFRESH = pygame.USEREVENT+1
         pygame.time.set_timer(self.REFRESH, 1000//self.FPS)
 
@@ -186,7 +189,20 @@ class PgmeMain(object):
                 a = f.readline()
                 a = a.rstrip('\r\n')
                 self.symbol.append(a)
-        
+                
+                u = self.v_list1[i]
+                
+                """
+                #append parents to adjacentcy list
+                for v in self.a_list1[i]:
+                    j = self.v_list1.index(v)
+                    u.child += 1                    
+                    if u not in self.a_list1[j]:
+                        self.a_list1[j].append(u)            
+                        v.parent += 1      
+
+                """
+            
             
             self.win_loose_draw()
             self.minimax(self.v_list1[0], True)           
@@ -207,18 +223,16 @@ class PgmeMain(object):
                     u = self.v_list1[i]
                     
                     if (u.xy[0]-pos[0])**2 + (u.xy[1]-pos[1])**2 < 9:
-                        print "-----"
+                        print "========"
                         print self.symbol[i][0:3]    
                         print self.symbol[i][3:6]
                         print self.symbol[i][6:9]   
-                        print "-----"
-                        print u.win
-                        print "====="
-                        for v in self.a_list1[i]:
-                            print v.win,
-                        print "====="     
-                    
-                           
+                        print "========"
+                        print "Parents:", u.parent
+                        print "Children:", u.child
+                        
+            
+                          
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
                 
@@ -230,7 +244,7 @@ class PgmeMain(object):
                                  and (self.state == 0 or self.state == 4):
                     
                     
-                    """        
+                            
                     #add vertex 
                     if self.selected_index is None:  
                         add = True
@@ -251,7 +265,7 @@ class PgmeMain(object):
                             self.a_list1.append([])
                     
                          
-                    """
+                    
                 elif event.button == 3 and 10 < pos[0] < \
                                 (self.width-10) and 0 < pos[1] < self.height-20\
                                 and self.state == 0:
@@ -324,7 +338,7 @@ class PgmeMain(object):
                     self.selected_index = None
                     self.move_vertex = False
                     
-                """
+               
                 # connecting two vertices with an edge    
                 elif event.button == 3\
                      and 10 < pos[0] < (self.width-10) and \
@@ -359,7 +373,7 @@ class PgmeMain(object):
                 else:
                     self.selected_index = None
                     self.move_vertex = None
-                """
+            
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
                 
                 if self.state == 0:           
@@ -439,31 +453,12 @@ class PgmeMain(object):
     def deg(self,v):
         return len(self.a_list1[self.v_list1.index(v)])
    
-   
-    def symmetry(self):
-        for i in range(len(self.v_list1)):
-            u=self.v_list1[i]
-            s=self.symbol[i]
-            if s != s[6]+s[3]+s[0]+s[7]+s[4]+s[1]+s[8]+s[5]+s[2]:
-                u.sym += 1
-            if s != s[8]+s[7]+s[6]+s[5]+s[4]+s[3]+s[2]+s[1]+s[0]:
-                u.sym += 1
-            if s != s[2]+s[5]+s[8]+s[1]+s[4]+s[7]+s[0]+s[3]+s[6]:
-                u.sym += 1
-                
-                
-    
+
     def win_loose_draw(self):
         #win:
         for i in self.symbol:
         
-            #if "-" not in i:
-            #    self.win.append("d")
-            
-            
-            #else:    
-            
-            
+         
             if i[0:3] == "XXX" or i[3:6] == "XXX" or i[6:9] == "XXX":
                 self.win.append("x")
             elif i[0:3] == "OOO" or i[3:6] == "OOO" or i[6:9] == "OOO":     
@@ -545,27 +540,97 @@ class PgmeMain(object):
                 
             
     def reorder(self):
+        lev_list=[[],[],[]]
+        
+        for m in range(10):
+            levelm = [v for v in self.v_list1 if self.moves(v) == m]
+            
+            
+            for winner in [-1, 0, 1]:
+                levelmi = [v for v in levelm if v.win == winner]
+                
+                
+                
+                # Bad - Omega(n^2log n) time algorithm in here.
+                levelmi = sorted(levelmi, key=lambda v: \
+                        -len(self.a_list1[self.v_list1.index(v)])*winner)
+                
+                lev_list[winner+1].append(levelmi)      
+                xblock = (winner+1)*self.width/3 \
+                        + (self.width/3)/(len(levelmi)+1)
+
+                for v in levelmi:
+                    v.xy = int(xblock), int(self.height*(10-m)/11)
+                    xblock += (self.width/3)/(len(levelmi)+1)
+        
+        
+        for l in [0,1,2]:
+           
+            q = Queue()
+            current_moves = 9           
+            
+            
+            #for i in reversed(range(10)):
+            #    if lev_list[l] != None:
+            #        a = max(a,i) 
+            #    print "size at ",i," :", len(lev_list[l][i])
+                 
+            i = 9
+            while len(lev_list[l][i]) == 0:
+               i -= 1
+               print i
+            
+            for j in range(len(lev_list[l][i])):
+            
+                print j,len(lev_list[l][i])
+                print lev_list[l][i][j].xy
+                q.put(lev_list[l][i][j])
+            
+            
+                while q.qsize() > 0:
+                    u = q.get()
+                    i = self.v_list1.index(u)
+                
+                    if u.locate == False:   
+                        if self.moves(u) < current_moves:
+                            current_moves = self.moves(u) 
+                            xblock = l*self.width/3
+                               
+                            
+                        xblock +=  ((self.width/3)/ (len(lev_list[l][current_moves])+1))
+                        print xblock, 1*self.width/3, current_moves, len(lev_list[l][current_moves])
+                        
+                        u.xy = (int(xblock),int(self.height*(10-current_moves)/11))
+                            
+                        u.locate = True
+                        
+                        
+                    for w in self.a_list1[i]:
+                        q.put(w)
+                        
+              
+        """
         q = Queue()
         q.put(self.v_list1[0])
+        
+        
+        
         xblock = 80
         level = 1/11
-        
-        theta = 0
-        
+        #theta = 0
         
         #set the counters
-        c=Counter()
+
         c_a=Counter()
-        
+      
         for i in range(len(self.v_list1)):
             u = self.v_list1[i]
             c_a[self.moves(u)] += 1
          
             
-            for v in self.a_list1[i]:
-                    c[v] +=1
-                           
-            u.counter = c[u]
+        for i in range(10):
+            print "moves: ", i, "vertices: ", c_a[i]   
+            
             
                
         
@@ -595,7 +660,7 @@ class PgmeMain(object):
                     
                     
                     
-                r = (level*(self.height))
+               #r = (level*(self.height))
                 
                 u.xy = (int(xblock), int(level*self.height))
                
@@ -606,15 +671,14 @@ class PgmeMain(object):
                 
                 u.locate = True
              
-            if u.counter > 0:
-                u.counter - 1
-            
+
             #print i, q.qsize()
             
             
             #sorted(self.a_list1[i], key=attrgetter('win') )
             
-            for v in sorted(self.a_list1[i], key=attrgetter('counter'), reverse = (xblock > self.width/2) ):
+                       
+            for v in (self.a_list1[i]):
                 
                 
                 if v.locate == False and self.moves(v) < self.moves(u):
@@ -623,7 +687,7 @@ class PgmeMain(object):
                 
                     
                 
-        """
+        
         for i in range(len(self.v_list1)):
             c=Counter()
             
@@ -695,60 +759,7 @@ class PgmeMain(object):
             
             
             
-            """
-            ####
-            ## angular motion 1
-            n= 0
-            (ux,uy) = (0,0)
-            nf_a = 0
-            (f_ux,f_uy) = (0,0)
             
-            (vx,vy) = (i.xy[0] - self.width/2),(i.xy[1]-self.height-100)
-            
-            #orthogonal vector:
-            if fx_a >0:
-                if fx_a/abs(fx_a) > 0:
-                    (ox,oy) = (-vx,vy)
-                else:
-                    (ox,oy) = (vx,-vy)
-            
-                n = sqrt(ox**2 + oy**2)
-
-
-                #unit vector
-                (ux, uy) = (ox/n, oy/n)
-            
-            else:
-                (ox,oy) = (0,0)
-                (ux,uy) = (0,0) 
-               
-           
-            
-            nf_a = sqrt(fx_a**2+fy_a**2)/5
-
-            (f_ux,f_uy) = (nf_a*f_ux,nf_a*uy)
-
-            ###
-            
-            
-            #angular motion 2
-            
-            (vx,vy) = (i.xy[0] - self.width/2),(i.xy[1]-self.height/2)
-            r = sqrt(vx**2 + vy**2)
-                
-                
-            if i.xy[0]+fx_a*(1/self.FPS)-self.width/2 != 0:
-                theta = atan((i.xy[1]+fy_a*(1/self.FPS)-(self.height/2))/(i.xy[0]+fx_a*(1/self.FPS)-self.width/2))
-                
-                
-                fx_a = int(r*cos(theta))
-                fy_a = int(r*sin(theta))
-                
-            else:
-                fx_a = 0
-                fx_y = 0
-    
-            """
             
             #proximity to other vertices
             (fx_r,fy_r) = (0,0)
@@ -965,11 +976,11 @@ class PgmeMain(object):
         self.screen.blit(self.colour_msg3,rect)
         
         # draw controls
-        msg1 = "mouse left : add/move vertex  |  mouse right : connect vertex    "
+        #msg1 = "mouse left : add/move vertex  |  mouse right : connect vertex    "
         msg2 = "|  d : delete   |   s : save to file   |   l: load from file   "
         msg3 =    "|  f : force embed   |   i: zoom in  |   o: zoom out "
         
-        controls = self.control_font.render(msg1+msg2+msg3,True, CHALK)
+        controls = self.control_font.render(msg2+msg3,True, CHALK)
         rect = controls.get_rect()
         rect = rect.move(10,self.height-30)
         self.screen.blit(controls,rect)
@@ -1011,7 +1022,7 @@ class PgmeMain(object):
         # when one vertex is being moved, make sure not to draw the edges
         # until it reaches its final destination
        
-        
+        """
         if self.move_vertex:
             for i in range(len(self.a_list1)):
                 deg = self.deg(self.v_list1[i])
@@ -1036,24 +1047,23 @@ class PgmeMain(object):
     
     
         else:
-
-            for i in range(len(self.a_list1)):
-                deg = self.deg(self.v_list1[i])
-                col = c_list[7-min(deg,7)]
-                for j in self.a_list1[i]:
+        """
+        for i in range(len(self.a_list1)):
+             deg = self.deg(self.v_list1[i])
+            # col = c_list[7-min(deg,7)]
+             for j in self.a_list1[i]:
                 
-                    s= j.sym   
+                    
                     # pygame.draw.line(self.screen,LAV,self.v_list1[\
                                                # i].xy,j.xy, 1)
                                                 
                                                 
                                                 
-                                                
+                if self.v_list1[i].win == j.win:                                   
                     if self.moves(j) < self.moves(self.v_list1[i]):
-                        col = c_list2[j.win+s]
-                        
-                        pygame.draw.line(self.screen,col,\
-                            j.xy,self.v_list1[i].xy, s)
+                       col = c_list2[j.win+1]
+                            
+                       pygame.draw.line(self.screen,col,j.xy,self.v_list1[i].xy, 1)
 
 
 
@@ -1067,12 +1077,12 @@ class PgmeMain(object):
             col = c_list2[i.win+1]
             
             if i is not selected_vertex:
-                pygame.draw.circle(self.screen,col,i.xy,i.counter+2)
+                pygame.draw.circle(self.screen,col,i.xy,3)
             else:
                 if self.move_vertex:
-                    pygame.draw.circle(self.screen,LAV,pos,i.counter+2)
+                    pygame.draw.circle(self.screen,LAV,pos,3)
                 else:
-                    pygame.draw.circle(self.screen,colh,i.xy,i.counter+2)
+                    pygame.draw.circle(self.screen,colh,i.xy,3)
                     pygame.draw.line(self.screen,CORAL,i.xy,pos,1)
                     
 
