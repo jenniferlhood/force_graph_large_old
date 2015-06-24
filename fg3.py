@@ -24,10 +24,10 @@ CHALK = (200,200,200)
 
 POND = (1,70,54)
 
-c_list_win = [(255,235,225),(225,235,255),(225,255,235)]
+c_list_win = [(255,235,225),(225,255,235),(225,235,255)]
 c_list = [(0,0,0),(200,200,200)]
-c_list1 = [(200,55,35),(35,55,200),(35,200,55),(225,190,170),(170,190,225),(170,225,190)]
-c_list2 = [(222,45,38),(255,255,255),(49,163,84)]
+c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,190,170),(170,225,190),(170,190,225)]
+c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
 
 factor = 1
 
@@ -356,14 +356,18 @@ class PgmeMain(object):
                                  and w.win == v.win]
                                  
                     children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
-                                    and w.win == w.win]             
+                                    and w.win == v.win]             
+                                    
+                    
+                    
+                    
                     if parents:
                         
                         v.sortkey = sum([w.xy[0] for w in parents])/len(parents)
                         
                         if not children:
                             if v.win == -1: 
-                                v.sortkey = 0
+                                v.sortkey = v.sortkey - 2**20
                               
                             elif v.win == 1:
                                 v.sortkey = v.sortkey + 2**20
@@ -386,8 +390,9 @@ class PgmeMain(object):
                                 v.sortkey = choice([2**20, -2**20])
                         else:
                             #v.sortkey = -v.win * 2**20
-                            v.sortkey = -v.win * 2**20
-                            
+                            v.sortkey = -v.win * (len(children)+1)**20
+                            if self.moves(v) > 5:
+                                print v.win,v.sortkey                            
                             
     
                             
@@ -396,11 +401,13 @@ class PgmeMain(object):
                 #        -len(self.a_list1[self.v_list1.index(v)])*winner)
                 levelmi = sorted(levelmi, key=lambda v: v.sortkey)
                 
-                lev_list[winner+1].append(levelmi)      
+                #lev_list[winner+1].append(levelmi)      
+                
                 xblock = (winner+1)*self.width/3 \
                         + (self.width/3)/(len(levelmi)+1)
 
                 for v in levelmi:
+
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
         
