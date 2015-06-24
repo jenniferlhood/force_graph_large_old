@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,55,200),(35,200,55),(225,190,170),(170,190,225),(170,225,190)]
 c_list2 = [(222,45,38),(255,255,255),(49,163,84)]
 
-factor = 2
+factor = 1
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -354,9 +354,21 @@ class PgmeMain(object):
                     parents = [w for w in self.a_list1[i] 
                                 if self.moves(w) > self.moves(v) 
                                  and w.win == v.win]
+                                 
+                    children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
+                                    and w.win == w.win]             
                     if parents:
                         
                         v.sortkey = sum([w.xy[0] for w in parents])/len(parents)
+                        
+                        if not children:
+                            if v.win == -1: 
+                                v.sortkey = 0
+                              
+                            elif v.win == 1:
+                                v.sortkey = v.sortkey + 2**20
+                                           
+                      
                     else:
                         # FIXME: Be smarter with draws
                         if winner == 0:
@@ -376,6 +388,8 @@ class PgmeMain(object):
                             #v.sortkey = -v.win * 2**20
                             v.sortkey = -v.win * 2**20
                             
+                            
+    
                             
                 # Bad - Omega(n^2log n) time algorithm in here.
                 # levelmi = sorted(levelmi, key=lambda v: \
