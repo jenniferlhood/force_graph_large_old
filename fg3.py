@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,55,200),(35,200,55),(225,190,170),(170,190,225),(170,225,190)]
 c_list2 = [(222,45,38),(255,255,255),(49,163,84)]
 
-factor = 1
+factor = 2
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -44,8 +44,8 @@ class PgmeMain(object):
     def __init__(self):
 
         pygame.init()
-        self.width = 1700*factor
-        self.height = 1080*factor
+        self.width = int(1700*factor)
+        self.height = int(1080*factor)
         self.screen = pygame.display.set_mode((self.width, self.height))
     
         self.FPS = 30
@@ -575,12 +575,12 @@ class PgmeMain(object):
     def draw_vertex(self, v):
         i = self.v_list1.index(v)
         col_dict = {"O":0,"-":1,"X":2}
-        size = 5*factor
+        size = int(5*factor)
         
         if v.win == 1 and 1 < self.moves(v) < 6:
-            size = 3*factor
+            size = int(3*factor)
         elif v.win == -1 and 1 < self.moves(v) < 5:
-            size = 3*factor
+            size = int(3*factor)
         
         #draw player moves
         for x in [-1,0,1]:
@@ -615,7 +615,7 @@ class PgmeMain(object):
                        
                        col = c_list1[u.win+4] 
                             
-                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, factor)
+                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, int(factor))
 
 
 
