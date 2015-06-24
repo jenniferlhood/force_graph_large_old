@@ -24,17 +24,12 @@ CHALK = (200,200,200)
 
 POND = (1,70,54)
 
-c_list_win = [(235,235,255),(255,235,235),(235,255,235)]
-
+c_list_win = [(255,235,225),(225,235,255),(225,255,235)]
 c_list = [(0,0,0),(200,200,200)]
+c_list1 = [(200,55,35),(35,55,200),(35,200,55),(200,180,150),(150,180,200),(150,200,180)]
+c_list2 = [(222,45,38),(255,255,255),(49,163,84)]
 
-
-c_list1 = [(43,140,190),(222,45,38),(49,163,84),(166,189,219),(252,146,114),(173,221,142)]
-
-#c_list2 = [(141,160,203),(252,141,98),(102,194,165)]
-
-#c_list1= [(100,226,240),(80,209,230),(60,189,219),\
-#            (40,169,207),(20,144,192),(10,129,138),(5,100,80),(1,70,54)]
+factor = 1
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -49,8 +44,8 @@ class PgmeMain(object):
     def __init__(self):
 
         pygame.init()
-        self.width = 1700
-        self.height = 1080
+        self.width = 1700*factor
+        self.height = 1080*factor
         self.screen = pygame.display.set_mode((self.width, self.height))
     
         self.FPS = 30
@@ -353,12 +348,14 @@ class PgmeMain(object):
             
             for winner in [-1, 0, 1]:
                 levelmi = [v for v in levelm if v.win == winner]
+                
                 for v in levelmi:
                     i = self.v_list1.index(v) # Ack!
                     parents = [w for w in self.a_list1[i] 
                                 if self.moves(w) > self.moves(v) 
                                  and w.win == v.win]
                     if parents:
+                        
                         v.sortkey = sum([w.xy[0] for w in parents])/len(parents)
                     else:
                         # FIXME: Be smarter with draws
@@ -376,7 +373,10 @@ class PgmeMain(object):
                             else:
                                 v.sortkey = choice([2**20, -2**20])
                         else:
-                            v.sortkey = -v.win* 2**20
+                            #v.sortkey = -v.win * 2**20
+                            v.sortkey = -v.win * 2**20
+                            
+                            
                 # Bad - Omega(n^2log n) time algorithm in here.
                 # levelmi = sorted(levelmi, key=lambda v: \
                 #        -len(self.a_list1[self.v_list1.index(v)])*winner)
@@ -537,6 +537,8 @@ class PgmeMain(object):
             
         """ 
    
+  
+    
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
@@ -570,52 +572,74 @@ class PgmeMain(object):
 
 
 
+    def draw_vertex(self, v):
+        i = self.v_list1.index(v)
+        col_dict = {"O":0,"-":1,"X":2}
+        size = 5*factor
+        
+        if v.win == 1 and 1 < self.moves(v) < 6:
+            size = 3*factor
+        elif v.win == -1 and 1 < self.moves(v) < 5:
+            size = 3*factor
+        
+        #draw player moves
+        for x in [-1,0,1]:
+            for y in [-1,0,1]:
+                xy = (v.xy[0] + size*x, v.xy[1] + size*y)
+                col = c_list2[col_dict[self.symbol[i][(x+1)+(y+1)]]]
+                
+                rect = (xy[0], xy[1], size, size)
+                
+                pygame.draw.rect(self.screen,col,rect)
+                #pygame.draw.rect(self.screen,(0,0,0),rect,1)
+        
+        #draw the board outline        
+        x = v.xy[0]
+        y = v.xy[1]
+        
+        pygame.draw.line(self.screen,(0,0,0),(x,y-size),(x,y+2*size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x+size,y-size),(x+size,y+2*size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-size,y),(x+2*size,y),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-size,y+size),(x+2*size,y+size),1)
+        
+        
     def draw_graphs(self):
        
-       #draw the edges
+       #draw the edges of mistake moves
         for i in range(len(self.a_list1)):
-             for j in self.a_list1[i]:
-                    
-                    # pygame.draw.line(self.screen,LAV,self.v_list1[\
-                                               # i].xy,j.xy, 1)
-                                                
+             for u in self.a_list1[i]:
                                                
-                if self.v_list1[i].win != j.win:
+                if self.v_list1[i].win != u.win:
                                                      
-                    if self.moves(j) < self.moves(self.v_list1[i]):
+                    if self.moves(u) < self.moves(self.v_list1[i]):
                        
-                       col = c_list1[j.win+4] 
+                       col = c_list1[u.win+4] 
                             
-                       pygame.draw.line(self.screen,col,j.xy,self.v_list1[i].xy, 1)
+                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, factor)
 
 
 
 
 
-        #draw the edges
+        #draw the edges perfect plays
         for i in range(len(self.a_list1)):
-             for j in self.a_list1[i]:
-                    
-                    # pygame.draw.line(self.screen,LAV,self.v_list1[\
-                                               # i].xy,j.xy, 1)
-                                                
-                                               
-                if self.v_list1[i].win == j.win:
+             for u in self.a_list1[i]:
+                                              
+                if self.v_list1[i].win == u.win:
                                                      
-                    if self.moves(j) < self.moves(self.v_list1[i]):
-                       #col = c_list2[j.win+1]
+                    if self.moves(u) < self.moves(self.v_list1[i]):
+                       #col = c_list2[u.win+1]
                        col = c_list[0] 
                             
-                       pygame.draw.line(self.screen,col,j.xy,self.v_list1[i].xy, 1)
+                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, 1)
 
 
         
         #draw the vertices,
-        for i in self.v_list1:
-            deg = self.deg(i)
-                    
-            pygame.draw.circle(self.screen,c_list[0],i.xy,3)
-                               
+        for v in self.v_list1:
+                                
+            #pygame.draw.circle(self.screen,c_list[0],v.xy,3)
+            self.draw_vertex(v)                 
 
 
 
