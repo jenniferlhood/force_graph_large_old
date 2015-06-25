@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,190,170),(170,225,190),(170,190,225)]
 c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
 
-factor = 1
+factor = 2
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -719,7 +719,7 @@ class PgmeMain(object):
                             
                             #draw the horizontal line across to the child vertex
                             start_c = end_p
-                            end_c = (u.xy[0],end_p[1])
+                            end_c = (u.xy[0]+a*v_step,end_p[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             #draw the vertical line down to the child vertex
