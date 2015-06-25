@@ -44,7 +44,7 @@ class PgmeMain(object):
     def __init__(self):
 
         pygame.init()
-        self.width = int(1700*factor)
+        self.width = int(1900*factor)
         self.height = int(1080*factor)
         self.screen = pygame.display.set_mode((self.width, self.height))
     
@@ -82,6 +82,7 @@ class PgmeMain(object):
         # same index in the vertex list    
         self.a_list1 = []
         
+        self.lev_list=[[],[],[]]
         self.symbol = []
         self.win = []
         
@@ -340,7 +341,8 @@ class PgmeMain(object):
                 
             
     def reorder(self):
-        lev_list=[[],[],[]]
+        
+        
         
         for m in reversed(range(10)):
             levelm = [v for v in self.v_list1 if self.moves(v) == m]
@@ -348,6 +350,8 @@ class PgmeMain(object):
             
             for winner in [-1, 0, 1]:
                 levelmi = [v for v in levelm if v.win == winner]
+                
+                     
                 
                 for v in levelmi:
                     i = self.v_list1.index(v) # Ack!
@@ -357,22 +361,16 @@ class PgmeMain(object):
                                  
                     children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
                                     and w.win == v.win]             
-                                    
-                    
-                    
-                    
+                     
                     if parents:
                         
                         v.sortkey = sum([w.xy[0] for w in parents])/len(parents)
                         
                         if not children:
-                            if v.win == -1: 
-                                v.sortkey = v.sortkey - 2**20
-                              
-                            elif v.win == 1:
-                                v.sortkey = v.sortkey + 2**20
-                                           
-                      
+                            v.sortkey = v.sortkey + -v.win*(2**20)
+                   
+                             
+                            
                     else:
                         # FIXME: Be smarter with draws
                         if winner == 0:
@@ -382,17 +380,25 @@ class PgmeMain(object):
                             rp = len([w for w in self.a_list1[i] 
                                 if self.moves(w) > self.moves(v) 
                                  and w.win == 1])
+                            """
                             if lp > rp:
-                                v.sortkey = -2**20
-                            elif rp < lp:
                                 v.sortkey = 2**20
+                            elif rp < lp:
+                                v.sortkey = -2**20
                             else:
                                 v.sortkey = choice([2**20, -2**20])
+                            """
+                            if lp and not rp:
+                                v.sortkey = -2**20
+                            if rp and not lp:
+                                v.sortkey = 2**20
+                            else:
+                                v.sortkey = choice([2**20, -2**20])    
                         else:
                             #v.sortkey = -v.win * 2**20
                             v.sortkey = -v.win * (len(children)+1)**20
-                            if self.moves(v) > 5:
-                                print v.win,v.sortkey                            
+                           
+                                                        
                             
     
                             
@@ -401,7 +407,8 @@ class PgmeMain(object):
                 #        -len(self.a_list1[self.v_list1.index(v)])*winner)
                 levelmi = sorted(levelmi, key=lambda v: v.sortkey)
                 
-                #lev_list[winner+1].append(levelmi)      
+                self.lev_list[winner+1].append(levelmi)      
+                
                 
                 xblock = (winner+1)*self.width/3 \
                         + (self.width/3)/(len(levelmi)+1)
@@ -411,7 +418,55 @@ class PgmeMain(object):
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
         
+
+        """       
+        for l in [0,1,2]:
+            
+            
+            prev_row_size=len(lev_list[l][0])
+            
+            
+            for j in range(len(lev_list[l])):
+                
+                
+                if len(lev_list[l][j]) < prev_row_size:
+                    for v in lev_list[l][j]:
+                        i = self.v_list1.index(v)
+                        parents = [w for w in self.a_list1[i] 
+                                    if self.moves(w) > self.moves(v) 
+                                    and w.win == v.win]
+                        children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
+                                    and w.win == v.win]             
+                        if children:
+                            v.sortkey = sum([w.xy[0] for w in children])/len(children)  
+                            
+                            
+                lev_list[l][j] = sorted(lev_list[l][j], key=lambda v: v.sortkey)
+                
+                xblock = (l)*self.width/3 \
+                    + (self.width/3)/(len(levelmi)+1)
+                
+                for v in levelmi:
+                    m = self.moves(v)
+                    v.xy = int(xblock), int(self.height*(10-m)/11)
+                    xblock += (self.width/3)/(len(levelmi)+1)       
+                    
+                prev_row_size = lev_list[l][j]
+           
+        """        
         
+        
+        
+        
+             
+        
+        
+        
+        
+        
+        
+        
+                        
         """for l in [0,1,2]:
            
             q = Queue()
@@ -623,25 +678,91 @@ class PgmeMain(object):
         pygame.draw.line(self.screen,(0,0,0),(x-size,y),(x+2*size,y),1)
         pygame.draw.line(self.screen,(0,0,0),(x-size,y+size),(x+2*size,y+size),1)
         
+    
+    def draw_bad_edges(self):
+    
+        for i in range(1,10):
+            y = i/11*self.height+(1/22*self.height)
+            
+            #pygame.draw.line(self.screen,(100,100,100),(10,y),(self.width,y))
+            
+            #draw the edges of mistake moves
+        h_count = 0
         
-    def draw_graphs(self):
+        
+        
+        for l in [0,1,2]:
+            a= l-1
+            for i in range(len(self.lev_list[l])):
+                h_step = 0
+                h = len(self.lev_list[l][i])
+              
+                for v in self.lev_list[l][i]:
+                    v_step = 0
+                    
+                    j = self.v_list1.index(v)
+                    
+                    for u in self.a_list1[j]:
+                        col = c_list1[u.win+4] 
+                        if self.moves(u) < self.moves(v) and u.win != v.win:
+                            if a == 0:
+                                if self.moves(v) % 2 == 0:
+                                    a = -1
+                                elif self.moves(v) % 2 == 1:
+                                    a = 1
+                                    
+                            
+                            #draw the vertical line down the the desired depth        
+                            start_p = v.xy
+                            end_p = (v.xy[0],v.xy[1]+((4-3*a)/88*self.height) + a*h_step)
+                            pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
+                            
+                            #draw the horizontal line across to the child vertex
+                            start_c = end_p
+                            end_c = (u.xy[0],end_p[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+                            #draw the vertical line down to the child vertex
+                            start_c = end_c
+                            end_c = (u.xy[0]+a*v_step,u.xy[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+                            
+                            h_step += ((1/h)*(1/55)*self.height)
+                            v_step += int(factor)
+                            #pygame.draw.line(self.screen,col,v.xy,u.xy, int(factor))
+                           
        
-       #draw the edges of mistake moves
-        for i in range(len(self.a_list1)):
-             for u in self.a_list1[i]:
-                                               
-                if self.v_list1[i].win != u.win:
-                                                     
-                    if self.moves(u) < self.moves(self.v_list1[i]):
+        
+        
+        
+        
+        """
+        for i in range(len(self.v_list1)):
+            v = self.v_list1[i]
+             for u in self.a_list1[i]:                               
+                if self.v_list1[i].win != u.win:               
+                    if self.moves(u) < self.moves(v):
+                    
                        
                        col = c_list1[u.win+4] 
-                            
-                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, int(factor))
-
-
-
-
-
+                       
+                       #draw lines originating from parents
+                       
+                       start = v.xy
+                       end = v.xy[0],v.xy[1]+100
+                       pygame.draw.line(self.screen,col,start,end,int(factor))    
+                       
+                       #pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, int(factor))
+        
+        
+        """
+ 
+ 
+    def draw_graphs(self):
+ 
+        self.draw_bad_edges()
+        
         #draw the edges perfect plays
         for i in range(len(self.a_list1)):
              for u in self.a_list1[i]:
