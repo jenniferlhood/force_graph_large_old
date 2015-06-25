@@ -719,12 +719,12 @@ class PgmeMain(object):
                             
                             #draw the horizontal line across to the child vertex
                             start_c = end_p
-                            end_c = (u.xy[0]+a*v_step,end_p[1])
+                            end_c = (u.xy[0]-a*v_step,end_p[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             #draw the vertical line down to the child vertex
                             start_c = end_c
-                            end_c = (u.xy[0]+a*v_step,u.xy[1])
+                            end_c = (u.xy[0]-a*v_step,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             
