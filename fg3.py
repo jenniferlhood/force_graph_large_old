@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,190,170),(170,225,190),(170,190,225)]
 c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
 
-factor = 2
+factor = 1
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -694,46 +694,49 @@ class PgmeMain(object):
         for l in [0,1,2]:
             a= l-1
             for i in range(len(self.lev_list[l])):
-                h_step = 0
-                h = len(self.lev_list[l][i])
+                v_step = 0
+                s = len(self.lev_list[l][i])
               
                 for v in self.lev_list[l][i]:
-                    v_step = 0
+                    v.v_step = 0
                     
                     j = self.v_list1.index(v)
                     
                     for u in self.a_list1[j]:
+                        h_step = 0
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
                             if a == 0:
-                                if self.moves(v) % 2 == 0:
+                                if i % 2 == 0:
                                     a = -1
-                                elif self.moves(v) % 2 == 1:
+                                else:
                                     a = 1
                                     
                             
                             #draw the vertical line down the the desired depth        
                             start_p = v.xy
-                            end_p = (v.xy[0],v.xy[1]+((4-3*a)/88*self.height) + a*h_step)
+                            end_p = (v.xy[0],v.xy[1]+((4-3*a)/88*self.height) + a*v_step)
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
                             start_c = end_p
-                            end_c = (u.xy[0]-a*v_step,end_p[1])
+                            end_c = (u.xy[0]-a*h_step,end_p[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             #draw the vertical line down to the child vertex
                             start_c = end_c
-                            end_c = (u.xy[0]-a*v_step,u.xy[1])
+                            end_c = (u.xy[0]-a*h_step,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
-                            
-                            h_step += ((1/h)*(1/55)*self.height)
-                            v_step += int(factor)
+                            h_step += int(factor)
                             #pygame.draw.line(self.screen,col,v.xy,u.xy, int(factor))
-                           
-       
+                            
+                    v_step += int((1/s)*(1/22)*self.height)    
+            
         
+        
+        #counter_dict={9:0,8:0,7:0,6:0,5:0,4:0,3:0,2:0,1:0}
+        #for i in range(len(self.v_list1)):
         
         
         
