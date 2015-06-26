@@ -85,8 +85,9 @@ class PgmeMain(object):
         self.lev_list=[[],[],[]]
         self.symbol = []
         self.win = []
-        
-
+        self.row_count = Counter()
+        #self.levs = Counter()
+        self.levs = [[],[],[],[],[],[],[],[],[],[]]
         #after variable initialization, run the main program loop
         self.event_loop()
 
@@ -341,17 +342,18 @@ class PgmeMain(object):
                 
             
     def reorder(self):
-        
-        
-        
+       
+       
         for m in reversed(range(10)):
             levelm = [v for v in self.v_list1 if self.moves(v) == m]
             
-            
+                 
             for winner in [-1, 0, 1]:
                 levelmi = [v for v in levelm if v.win == winner]
                 
-                     
+                if winner == (-1+(m % 2)) or winner == (0+(m %2)):
+                    self.row_count[m] +=len(levelmi)
+                    self.levs[m] += levelmi
                 
                 for v in levelmi:
                     i = self.v_list1.index(v) # Ack!
@@ -374,26 +376,11 @@ class PgmeMain(object):
                     else:
                         # FIXME: Be smarter with draws
                         if winner == 0:
-                            lp = len([w for w in self.a_list1[i] 
-                                if self.moves(w) > self.moves(v) 
-                                 and w.win == -1])
-                            rp = len([w for w in self.a_list1[i] 
-                                if self.moves(w) > self.moves(v) 
-                                 and w.win == 1])
-                            """
-                            if lp > rp:
+ 
+                           if self.moves(v) % 2 == 0:
                                 v.sortkey = 2**20
-                            elif rp < lp:
+                           else:
                                 v.sortkey = -2**20
-                            else:
-                                v.sortkey = choice([2**20, -2**20])
-                            """
-                            if lp and not rp:
-                                v.sortkey = -2**20
-                            if rp and not lp:
-                                v.sortkey = 2**20
-                            else:
-                                v.sortkey = choice([2**20, -2**20])    
                         else:
                             #v.sortkey = -v.win * 2**20
                             v.sortkey = -v.win * (len(children)+1)**20
@@ -417,204 +404,9 @@ class PgmeMain(object):
 
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
-        
-
-        """       
-        for l in [0,1,2]:
-            
-            
-            prev_row_size=len(lev_list[l][0])
-            
-            
-            for j in range(len(lev_list[l])):
-                
-                
-                if len(lev_list[l][j]) < prev_row_size:
-                    for v in lev_list[l][j]:
-                        i = self.v_list1.index(v)
-                        parents = [w for w in self.a_list1[i] 
-                                    if self.moves(w) > self.moves(v) 
-                                    and w.win == v.win]
-                        children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
-                                    and w.win == v.win]             
-                        if children:
-                            v.sortkey = sum([w.xy[0] for w in children])/len(children)  
-                            
-                            
-                lev_list[l][j] = sorted(lev_list[l][j], key=lambda v: v.sortkey)
-                
-                xblock = (l)*self.width/3 \
-                    + (self.width/3)/(len(levelmi)+1)
-                
-                for v in levelmi:
-                    m = self.moves(v)
-                    v.xy = int(xblock), int(self.height*(10-m)/11)
-                    xblock += (self.width/3)/(len(levelmi)+1)       
-                    
-                prev_row_size = lev_list[l][j]
-           
-        """        
-        
-        
-        
-        
-             
-        
-        
-        
-        
-        
-        
-        
-                        
-        """for l in [0,1,2]:
-           
-            q = Queue()
-            current_moves = 9           
-            
-            
-            #for i in reversed(range(10)):
-            #    if lev_list[l] != None:
-            #        a = max(a,i) 
-            #    print "size at ",i," :", len(lev_list[l][i])
-                 
-            i = 9
-            while len(lev_list[l][i]) == 0:
-               i -= 1
-               print i
-            
-            for j in range(len(lev_list[l][i])):
-            
-                print j,len(lev_list[l][i])
-                print lev_list[l][i][j].xy
-                q.put(lev_list[l][i][j])
-            
-            
-                while q.qsize() > 0:
-                    u = q.get()
-                    i = self.v_list1.index(u)
-                
-                    if u.locate == False:   
-                        if self.moves(u) < current_moves:
-                            current_moves = self.moves(u) 
-                            xblock = l*self.width/3
-                               
-                            
-                        xblock +=  ((self.width/3)/ (len(lev_list[l][current_moves])+1))
-                        print xblock, 1*self.width/3, current_moves, len(lev_list[l][current_moves])
-                        
-                        u.xy = (int(xblock),int(self.height*(10-current_moves)/11))
-                            
-                        u.locate = True
-                        
-                        
-                    for w in self.a_list1[i]:
-                        q.put(w)
-                        
-              
-        
-        q = Queue()
-        q.put(self.v_list1[0])
-        
-        
-        
-        xblock = 80
-        level = 1/11
-        #theta = 0
-        
-        #set the counters
-
-        c_a=Counter()
-      
-        for i in range(len(self.v_list1)):
-            u = self.v_list1[i]
-            c_a[self.moves(u)] += 1
-         
-            
-        for i in range(10):
-            print "moves: ", i, "vertices: ", c_a[i]   
-            
-            
-               
-        
-            
-        while q.qsize() > 0:
-            
-            
-            u = q.get()
-            i = self.v_list1.index(u)
-            
-                                 
-            new_level = (10-self.moves(u))/11
-              
-            if u.locate == False: #and u.counter == 0:    
-
-                if new_level > level:
-                    level = new_level
-                    #theta = 0
-                    #xblock = 80
-                    xblock = (self.width-80)/(c_a[self.moves(u)]+1)+40
-                    
-                    
-                else:
-                    #xblock += 7
-                    xblock += (self.width-80)/(c_a[self.moves(u)]+1)
-                    #theta -= (pi/(c_a[self.moves(u)]+1))
-                    
-                    
-                    
-               #r = (level*(self.height))
-                
-                u.xy = (int(xblock), int(level*self.height))
-               
-               
-                #if i == 0:
-                #    u.xy = (self.width/2,self.height-100)
-                #u.xy = (int(r*cos(theta)+self.width/2),int(r*sin(theta)+self.height/2))
-                
-                u.locate = True
-             
-
-            #print i, q.qsize()
-            
-            
-            #sorted(self.a_list1[i], key=attrgetter('win') )
-            
-                       
-            for v in (self.a_list1[i]):
-                
-                
-                if v.locate == False and self.moves(v) < self.moves(u):
-                    
-                    q.put(v)
-                
-                    
-                
-        
-        for i in range(len(self.v_list1)):
-            c=Counter()
-            
-            for j in self.symbol[i]:
-                c[j]+=1
-            
-            block = (10-c['-'])/10
-            
-            if (10-c['-']) not in self.wells:
-                self.wells[10-c['-']] = 1
-            else:
-                self.wells[10-c['-']] += 1
-                
-                 
-            y = int((self.height-50)*(block)-(self.height-50)/20)
-            x = randrange(int(15*self.width/31),int(16*self.width/31))
-            
-            
-            self.v_list1[i].xy=(x,y) 
-            
-        """ 
-   
+                    v.sortkey = v.xy[0]
   
-    
+       
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
@@ -680,7 +472,7 @@ class PgmeMain(object):
         
     
     def draw_bad_edges(self):
-    
+        """
         for i in range(1,10):
             y = i/11*self.height+(1/22*self.height)
             
@@ -688,17 +480,21 @@ class PgmeMain(object):
             
             #draw the edges of mistake moves
         h_count = 0
+        """
         
         
+        
+        
+        """
+        v_step_count = {9:0,8:0,7:0,6:0,5:0,4:0,3:0,2:0,1:0,0:0}
         
         for l in [0,1,2]:
             a= l-1
             for i in range(len(self.lev_list[l])):
-                v_step = 0
+                
                 s = len(self.lev_list[l][i])
               
                 for v in self.lev_list[l][i]:
-                    v.v_step = 0
                     
                     j = self.v_list1.index(v)
                     
@@ -706,13 +502,15 @@ class PgmeMain(object):
                         h_step = 0
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
-                            if a == 0:
+                            if l == 0:
                                 if i % 2 == 0:
                                     a = -1
                                 else:
                                     a = 1
-                                    
                             
+                            step = (1/self.row_count[i])*(1/11)*self.height
+                            v_step = int(v_step_count[i]*step)
+                                                       
                             #draw the vertical line down the the desired depth        
                             start_p = v.xy
                             end_p = (v.xy[0],v.xy[1]+((4-3*a)/88*self.height) + a*v_step)
@@ -730,17 +528,123 @@ class PgmeMain(object):
                             
                             h_step += int(factor)
                             #pygame.draw.line(self.screen,col,v.xy,u.xy, int(factor))
-                            
-                    v_step += int((1/s)*(1/22)*self.height)    
+                     
+                    v_step_count[i] += 1
+                      
+                    #v_step_count[i] += int((1/self.row_count[i])*(4/55)*self.height)    
             
         
-        
-        #counter_dict={9:0,8:0,7:0,6:0,5:0,4:0,3:0,2:0,1:0}
-        #for i in range(len(self.v_list1)):
-        
-        
-        
+      
         """
+        
+        
+        
+       
+        for m in reversed(range(10)):
+            v_step = 10
+            if m % 2 ==0:
+               
+                for v in reversed(sorted(self.levs[m], key= lambda w: w.sortkey)):
+                    n = len(self.levs[m])
+                    j = self.v_list1.index(v)
+                    v_step += min(int((1/n)*(1/11)*self.height),10)
+                    for u in self.a_list1[j]:
+                        col = c_list1[u.win+4] 
+                        if self.moves(u) < self.moves(v) and u.win != v.win:
+                            
+                                                               
+                            #draw the vertical line down the the desired depth        
+                            start_p = v.xy
+                            end_p = (v.xy[0], v.xy[1] + v_step)
+                            pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
+                            
+                            #draw the horizontal line across to the child vertex
+                            start_c = end_p
+                            end_c = (u.xy[0],end_p[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+                            #draw the vertical line down to the child vertex
+                            start_c = end_c
+                            end_c = (u.xy[0],u.xy[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+            else:
+                for v in sorted(self.levs[m], key= lambda w: w.sortkey):
+                    n = len(self.levs[m])
+                    j = self.v_list1.index(v)
+                    v_step += min(int((1/n)*(1/11)*self.height),10)
+                    for u in self.a_list1[j]:
+                        col = c_list1[u.win+4] 
+                        if self.moves(u) < self.moves(v) and u.win != v.win:
+                            
+                                                               
+                            #draw the vertical line down the the desired depth        
+                            start_p = v.xy
+                            end_p = (v.xy[0], v.xy[1] + v_step)
+                            pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
+                            
+                            #draw the horizontal line across to the child vertex
+                            start_c = end_p
+                            end_c = (u.xy[0],end_p[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+                            #draw the vertical line down to the child vertex
+                            start_c = end_c
+                            end_c = (u.xy[0],u.xy[1])
+                            pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                                   
+            
+            
+                
+            
+            
+            
+                
+            
+            
+            
+        """
+        v_step_count = {9:0,8:0,7:0,6:0,5:0,4:0,3:0,2:0,1:0,0:0}        
+        
+        
+        h_step = int(factor)
+        
+        for v in self.v_list1:
+            a = v.win
+            m = self.moves(v)
+            j = self.v_list1.index(v)
+            for u in self.a_list1[j]:
+                col = c_list1[u.win+4] 
+                if self.moves(u) < self.moves(v) and u.win != v.win:
+                    v_step = int((v_step_count[m]/self.row_count[m])*(1/11)*self.height)
+                                                       
+                    #draw the vertical line down the the desired depth        
+                    start_p = v.xy
+                    end_p = (v.xy[0],v.xy[1]+((4-3*a)/88*self.height) + a*v_step)
+                    pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
+                    
+                    #draw the horizontal line across to the child vertex
+                    start_c = end_p
+                    end_c = (u.xy[0]-a*h_step,end_p[1])
+                    pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                    
+                    #draw the vertical line down to the child vertex
+                    start_c = end_c
+                    end_c = (u.xy[0]-a*h_step,u.xy[1])
+                    pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                    
+                   
+                    #pygame.draw.line(self.screen,col,v.xy,u.xy, int(factor))
+            v_step_count[m] += 1
+        
+        
+        
+        
+        
+        
+        
+        
+        #draw single straight line segment for "bad edges"
         for i in range(len(self.v_list1)):
             v = self.v_list1[i]
              for u in self.a_list1[i]:                               
