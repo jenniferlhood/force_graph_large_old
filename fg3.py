@@ -26,7 +26,7 @@ POND = (1,70,54)
 
 c_list_win = [(255,235,225),(225,255,235),(225,235,255)]
 c_list = [(0,0,0),(200,200,200)]
-c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,190,170),(170,225,190),(170,190,225)]
+c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,170,150),(150,225,170),(150,170,225)]
 c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
 
 factor = 1
@@ -380,9 +380,6 @@ class PgmeMain(object):
                             wins[v.win]+=1   
                             
                     else:
-                        
-                        
-                    
                         if winner == 0:
  
                            if self.moves(v) % 2 == 0:
@@ -390,8 +387,8 @@ class PgmeMain(object):
                            else:
                                 v.sortkey = -2**20
                         else:
-                            #v.sortkey = -v.win * 2**20
-                            v.sortkey = -v.win * (len(children)+1)**20
+                            v.sortkey = -v.win * 2**20
+                        #    v.sortkey = -v.win * (len(children)+1)**20
                            
                                                         
                             
@@ -413,9 +410,80 @@ class PgmeMain(object):
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
                     v.sortkey = v.xy[0]
-  
+                
         print "player wins", wins
         print "fatal moves 1=X, 0=O", fatal  
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        for m in range(10):
+            levelm = [v for v in self.v_list1 if self.moves(v) == m]
+                 
+            for winner in [-1, 0, 1]:
+                levelmi = [v for v in levelm if v.win == winner]
+        
+                for v in levelmi:
+                     i = self.v_list1.index(v) # Ack!
+          
+                     children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
+                                    and w.win == v.win]
+                     
+                     if children:
+                        
+                        v.sortkey += sum([w.xy[0] for w in children])/len(children)
+  
+                levelmi = sorted(levelmi, key=lambda v: v.sortkey)
+                
+       
+       
+       
+        for m in reversed(range(10)):
+            levelm = [v for v in self.v_list1 if self.moves(v) == m]
+                 
+            for winner in [-1, 0, 1]:
+                levelmi = [v for v in levelm if v.win == winner]
+        
+                for v in levelmi:
+                     i = self.v_list1.index(v) # Ack!
+                     parents = [w for w in self.a_list1[i] 
+                                if self.moves(w) > self.moves(v) 
+                                 and w.win == v.win]
+                     children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
+                                    and w.win == v.win]
+                     if parents:
+                        v.sortkey += sum([w.xy[0] for w in parents])/len(parents)
+                        if not children:
+                            v.sortkey = v.sortkey + -v.win*(2**20)
+                     else:
+                        if winner == 0:
+ 
+                           if self.moves(v) % 2 == 0:
+                                v.sortkey = 2**22
+                           else:
+                                v.sortkey = -2**22
+                        else:
+                           v.sortkey += (-v.win * 2**20)
+                            #v.sortkey = -v.win * (len(children)+1)**20
+                    
+                levelmi = sorted(levelmi, key=lambda v: v.sortkey)
+    
+                xblock = (winner+1)*self.width/3 \
+                        + (self.width/3)/(len(levelmi)+1)
+
+                for v in levelmi:
+
+                    v.xy = int(xblock), int(self.height*(10-m)/11)
+                    xblock += (self.width/3)/(len(levelmi)+1)
+                    v.sortkey = v.xy[0]
+    
+    
+            
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
@@ -461,7 +529,7 @@ class PgmeMain(object):
         elif v.win == -1 and 1 < self.moves(v) < 5:
             size = int(3*factor)
         elif 0 < self.moves(v) < 7:
-            size = int(6*factor)
+            size = int(5*factor)
        
         #draw player moves
         for x in [-1,0,1]:
