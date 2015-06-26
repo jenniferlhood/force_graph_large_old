@@ -44,8 +44,8 @@ class PgmeMain(object):
     def __init__(self):
 
         pygame.init()
-        self.width = int(1900*factor)
-        self.height = int(1080*factor)
+        self.width = int(1920*factor)
+        self.height = int(1200*factor)
         self.screen = pygame.display.set_mode((self.width, self.height))
     
         self.FPS = 30
@@ -572,7 +572,9 @@ class PgmeMain(object):
                 for v in sorted(self.levs[m], key= lambda w: w.sortkey):
                     n = len(self.levs[m])
                     j = self.v_list1.index(v)
-                    v_step += min(int((1/n)*(1/11)*self.height),10)
+                    
+                    
+                    v_step += min(int((1/n+1)*(1/11)*self.height),10)
                     for u in self.a_list1[j]:
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
