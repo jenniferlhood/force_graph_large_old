@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,190,170),(170,225,190),(170,190,225)]
 c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
 
-factor = 2
+factor = 1
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -341,7 +341,10 @@ class PgmeMain(object):
                 
             
     def reorder(self):
-
+        #some stats
+        wins = Counter() #how many ways for each player to win
+        fatal = Counter() #how many fatal mistakes each player can make
+        
         for m in reversed(range(10)):
             levelm = [v for v in self.v_list1 if self.moves(v) == m]
                  
@@ -362,7 +365,11 @@ class PgmeMain(object):
                                 
                     children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
                                     and w.win == v.win]             
-                     
+                    bad_children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v) 
+                                and w.win != 0 and w.win != v.win ]
+                    
+                    fatal[self.moves(v)%2] += len(bad_children)
+                    
                     if parents:
                         
                         v.sortkey = sum([w.xy[0] for w in parents])/len(parents)
@@ -370,10 +377,12 @@ class PgmeMain(object):
                         if not children:
                             v.sortkey = v.sortkey + -v.win*(2**20)
                    
-                             
+                            wins[v.win]+=1   
                             
                     else:
-                        # FIXME: Be smarter with draws
+                        
+                        
+                    
                         if winner == 0:
  
                            if self.moves(v) % 2 == 0:
@@ -405,7 +414,8 @@ class PgmeMain(object):
                     xblock += (self.width/3)/(len(levelmi)+1)
                     v.sortkey = v.xy[0]
   
-       
+        print "player wins", wins
+        print "fatal moves 1=X, 0=O", fatal  
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
