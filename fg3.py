@@ -35,10 +35,11 @@ class Vertex(object):
     def __init__(self,(x,y)):
         self.xy = (x,y)
         self.win = "-"
-        #self.locate = False
         self.parent = 0
         self.child = 0
         self.bp = 0
+        self.size = int(9*factor)
+        self.counter = 1
         
 class PgmeMain(object):
     def __init__(self):
@@ -70,9 +71,7 @@ class PgmeMain(object):
         # 3 for load msg, 4 for force embed
         self.state = 0 
         self.timer = 0
-        
-
-        
+       
         #vertex and edge variables 
         #vertex list 
         self.v_list1 = []
@@ -440,7 +439,14 @@ class PgmeMain(object):
   
                 levelmi = sorted(levelmi, key=lambda v: v.sortkey)
                 
-       
+                xblock = (winner+1)*self.width/3 \
+                        + (self.width/3)/(len(levelmi)+1)
+
+                for v in levelmi:
+
+                    v.xy = int(xblock), int(self.height*(10-m)/11)
+                    xblock += (self.width/3)/(len(levelmi)+1)
+                    v.sortkey = v.xy[0]
        
        
         for m in reversed(range(10)):
@@ -483,6 +489,16 @@ class PgmeMain(object):
                     v.sortkey = v.xy[0]
     
     
+                        
+                    if v.win == 1 and 1 < self.moves(v) < 6:
+                        v.size = v.size/3
+                    elif v.win == -1 and 1 < self.moves(v) < 5:
+                        v.size = v.size/3
+                    elif 0 < self.moves(v) < 7:
+                        v.size = int((v.size+(1*factor))/2)
+    
+    
+    
             
     def draw_board(self):
         #draw the primary and secondary view
@@ -520,24 +536,25 @@ class PgmeMain(object):
     def draw_vertex(self, v):
         i = self.v_list1.index(v)
         col_dict = {"O":0,"-":1,"X":2}
-        size = int(9*factor)
         
-        
+        """
+        size = self.size
         
         if v.win == 1 and 1 < self.moves(v) < 6:
-            size = int(3*factor)
+            size = self.size/3
         elif v.win == -1 and 1 < self.moves(v) < 5:
             size = int(3*factor)
         elif 0 < self.moves(v) < 7:
             size = int(5*factor)
-       
+        """
+        
         #draw player moves
         for x in [-1,0,1]:
             for y in [-1,0,1]:
-                xy = (v.xy[0] + size*x, v.xy[1] + size*y)
+                xy = (v.xy[0] + v.size*x, v.xy[1] + v.size*y)
                 col = c_list2[col_dict[self.symbol[i][(x+1)+(y+1)*3]]]
                 
-                rect = (xy[0], xy[1], size, size)
+                rect = (xy[0], xy[1], v.size, v.size)
                 
                 pygame.draw.rect(self.screen,col,rect)
                 #pygame.draw.rect(self.screen,(0,0,0),rect,1)
@@ -546,10 +563,10 @@ class PgmeMain(object):
         x = v.xy[0]
         y = v.xy[1]
         
-        pygame.draw.line(self.screen,(0,0,0),(x,y-size),(x,y+2*size),1)
-        pygame.draw.line(self.screen,(0,0,0),(x+size,y-size),(x+size,y+2*size),1)
-        pygame.draw.line(self.screen,(0,0,0),(x-size,y),(x+2*size,y),1)
-        pygame.draw.line(self.screen,(0,0,0),(x-size,y+size),(x+2*size,y+size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x,y-v.size),(x,y+2*v.size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x+v.size,y-v.size),(x+v.size,y+2*v.size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y),(x+2*v.size,y),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y+v.size),(x+2*v.size,y+v.size),1)
         
     
     def draw_bad_edges(self):
@@ -567,6 +584,8 @@ class PgmeMain(object):
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
                             
+                            end_x = (u.xy[0]-u.size)+((u.counter-1+(1/max(1,(u.bp-1))))*u.size)
+                            u.counter += 1
                                                                
                             #draw the vertical line down the the desired depth        
                             start_p = v.xy
@@ -575,12 +594,12 @@ class PgmeMain(object):
                             
                             #draw the horizontal line across to the child vertex
                             start_c = end_p
-                            end_c = (u.xy[0],end_p[1])
+                            end_c = (end_x,end_p[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             #draw the vertical line down to the child vertex
                             start_c = end_c
-                            end_c = (u.xy[0],u.xy[1])
+                            end_c = (end_x,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
             
             else:
@@ -590,10 +609,15 @@ class PgmeMain(object):
                     
                     v_step += min((1/n)*(1/15)*self.height,10)
                     for u in self.a_list1[j]:
+                        
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
                             
-                                                               
+                            #calculate coordinate for edge connecting with child vertex
+                            
+                            end_x = (u.xy[0]-u.size)+((u.counter-1+(1/max(1,(u.bp-1))))*u.size)
+                            u.counter += 1
+                                                            
                             #draw the vertical line down the the desired depth        
                             start_p = v.xy
                             end_p = (v.xy[0], int(v.xy[1] + v_step))
@@ -601,17 +625,15 @@ class PgmeMain(object):
                             
                             #draw the horizontal line across to the child vertex
                             start_c = end_p
-                            end_c = (u.xy[0],end_p[1])
+                            end_c = (end_x,end_p[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                             #draw the vertical line down to the child vertex
                             start_c = end_c
-                            end_c = (u.xy[0],u.xy[1])
+                            end_c = (end_x,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                                    
-            
-            
-        
+                            
         """
         #draw single straight line segment for "bad edges"
         for i in range(len(self.v_list1)):
@@ -658,7 +680,7 @@ class PgmeMain(object):
                                 
             #pygame.draw.circle(self.screen,c_list[0],v.xy,3)
             self.draw_vertex(v)                 
-
+            v.counter = 1
 
 
 	
