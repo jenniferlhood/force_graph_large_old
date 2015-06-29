@@ -584,12 +584,12 @@ class PgmeMain(object):
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
                             
-                            end_x = (u.xy[0]-u.size)+((u.counter-1+(1/max(1,(u.bp-1))))*u.size)
+                            end_x = (u.xy[0]-u.size)+((u.bp-u.counter+(1/max(1,(u.bp-1))))*u.size)
                             u.counter += 1
                                                                
                             #draw the vertical line down the the desired depth        
-                            start_p = v.xy
-                            end_p = (v.xy[0], int(v.xy[1] + v_step))
+                            start_p = (v.xy[0]+int(3*v.size/2),v.xy[1])
+                            end_p = (v.xy[0]+int(3*v.size/2), int(v.xy[1] + v_step))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -619,8 +619,8 @@ class PgmeMain(object):
                             u.counter += 1
                                                             
                             #draw the vertical line down the the desired depth        
-                            start_p = v.xy
-                            end_p = (v.xy[0], int(v.xy[1] + v_step))
+                            start_p = (v.xy[0]-int(v.size/2),v.xy[1])
+                            end_p = (v.xy[0]-int(v.size/2), int(v.xy[1] + v_step))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -632,37 +632,15 @@ class PgmeMain(object):
                             start_c = end_c
                             end_c = (end_x,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
-                                   
-                            
-        """
-        #draw single straight line segment for "bad edges"
-        for i in range(len(self.v_list1)):
-            v = self.v_list1[i]
-             for u in self.a_list1[i]:                               
-                if self.v_list1[i].win != u.win:               
-                    if self.moves(u) < self.moves(v):
-                    
-                       
-                       col = c_list1[u.win+4] 
-                       
-                       #draw lines originating from parents
-                       
-                       start = v.xy
-                       end = v.xy[0],v.xy[1]+100
-                       pygame.draw.line(self.screen,col,start,end,int(factor))    
-                       
-                       #pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, int(factor))
-        
-        
-        
- 
-        """
+
+
     def draw_graphs(self):
  
         self.draw_bad_edges()
         
         #draw the edges perfect plays
         for i in range(len(self.a_list1)):
+             v = self.v_list1[i]
              for u in self.a_list1[i]:
                                               
                 if self.v_list1[i].win == u.win:
@@ -670,8 +648,12 @@ class PgmeMain(object):
                     if self.moves(u) < self.moves(self.v_list1[i]):
                        #col = c_list2[u.win+1]
                        col = c_list[0] 
-                            
-                       pygame.draw.line(self.screen,col,u.xy,self.v_list1[i].xy, 1)
+                       x = v.xy[0]+(v.size)/2
+                       y = v.xy[1]+2*v.size 
+                       
+                       x_u = u.xy[0]+(u.size)/2 
+                       y_u = u.xy[1]-u.size    
+                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), 1)
 
 
         
