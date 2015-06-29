@@ -40,6 +40,7 @@ class Vertex(object):
         self.bp = 0
         self.size = int(9*factor)
         self.counter = 1
+        self.sym = 1
         
 class PgmeMain(object):
     def __init__(self):
@@ -196,7 +197,7 @@ class PgmeMain(object):
 
             if event.type == pygame.QUIT:
                 sys.exit()
-          
+                """
             elif event.type == pygame.MOUSEMOTION:
                 pos = event.pos
                 for i in range(len(self.v_list1)):
@@ -232,7 +233,7 @@ class PgmeMain(object):
 
                 f.close()
                 self.state = 1
-
+                """
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_l:
                 #glob to read files into self.load_list
                         #determine number of files, can display 20 per page
@@ -409,7 +410,9 @@ class PgmeMain(object):
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
                     v.sortkey = v.xy[0]
-                
+                    v.sym = self.symmetry(v)
+                    
+                    
         print "player wins", wins
         print "fatal moves 1=X, 0=O", fatal  
         
@@ -499,6 +502,24 @@ class PgmeMain(object):
     
     
     
+    def symmetry(self,v):
+
+        i = self.v_list1.index(v)
+        b = self.symbol[i]
+        rotation = 0
+        
+        if b == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[5]+b[8]+b[2]:
+            rotation += 1
+        if b == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]:
+            rotation += 1
+        if b == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
+            rotation += 1
+        
+        if b == b[2]+b[1]+b[0]+b[5]+b[4]+b[3]+b[6]+b[7]+b[8]:
+            rotation = 2*rotation
+        
+        #return the number of boards represented, accounting for symmetries
+        return 7 - rotation
             
     def draw_board(self):
         #draw the primary and secondary view
@@ -588,8 +609,8 @@ class PgmeMain(object):
                             u.counter += 1
                                                                
                             #draw the vertical line down the the desired depth        
-                            start_p = (v.xy[0]+int(3*v.size/2),v.xy[1])
-                            end_p = (v.xy[0]+int(3*v.size/2), int(v.xy[1] + v_step))
+                            start_p = (v.xy[0]+v.size,v.xy[1])
+                            end_p = (v.xy[0]+v.size, int(v.xy[1] + v_step))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -619,8 +640,8 @@ class PgmeMain(object):
                             u.counter += 1
                                                             
                             #draw the vertical line down the the desired depth        
-                            start_p = (v.xy[0]-int(v.size/2),v.xy[1])
-                            end_p = (v.xy[0]-int(v.size/2), int(v.xy[1] + v_step))
+                            start_p = (v.xy[0],v.xy[1])
+                            end_p = (v.xy[0], int(v.xy[1] + v_step))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -653,7 +674,7 @@ class PgmeMain(object):
                        
                        x_u = u.xy[0]+(u.size)/2 
                        y_u = u.xy[1]-u.size    
-                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), 1)
+                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), max(1,int(u.sym/2)))
 
 
         
