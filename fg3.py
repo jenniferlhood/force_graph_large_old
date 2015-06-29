@@ -40,7 +40,7 @@ class Vertex(object):
         self.bp = 0
         self.size = int(9*factor)
         self.counter = 1
-        self.sym = 1
+       
         
 class PgmeMain(object):
     def __init__(self):
@@ -83,6 +83,7 @@ class PgmeMain(object):
         self.a_list1 = []
         
         self.symbol = []
+        self.s_list = [] #symmetry list
         self.win = []
         self.row_count = Counter()
         #self.levs = Counter()
@@ -173,21 +174,25 @@ class PgmeMain(object):
                 a = f.readline()
                 a = a.rstrip('\r\n')
                 self.symbol.append(a)
+                self.s_list.append([])
                 
                 u = self.v_list1[i]
                 
                 # append parents to adjacentcy list
                 for v in self.a_list1[i]:
                     j = self.v_list1.index(v)
-                    u.child += 1                    
+                    u.child += 1
+                                      
                     if u not in self.a_list1[j]:
                         self.a_list1[j].append(u)
                         v.parent += 1      
-
-            
+                        
+                
+                
             self.win_loose_draw()
             self.minimax(self.v_list1[0], True)           
             self.reorder()
+            self.symmetry()
             
     # Main Event handling method      
     def event_loop(self):
@@ -410,7 +415,7 @@ class PgmeMain(object):
                     v.xy = int(xblock), int(self.height*(10-m)/11)
                     xblock += (self.width/3)/(len(levelmi)+1)
                     v.sortkey = v.xy[0]
-                    v.sym = self.symmetry(v)
+                
                     
                     
         print "player wins", wins
@@ -502,24 +507,57 @@ class PgmeMain(object):
     
     
     
-    def symmetry(self,v):
-
-        i = self.v_list1.index(v)
-        b = self.symbol[i]
-        rotation = 0
-        
-        if b == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[5]+b[8]+b[2]:
-            rotation += 1
-        if b == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]:
-            rotation += 1
-        if b == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
-            rotation += 1
-        
-        if b == b[2]+b[1]+b[0]+b[5]+b[4]+b[3]+b[6]+b[7]+b[8]:
-            rotation = 2*rotation
-        
-        #return the number of boards represented, accounting for symmetries
-        return 7 - rotation
+    def symmetry(self):
+        for i in range(len(self.v_list1)):
+            self.s_list.append([])
+            for j in range(len(self.a_list1[i])):
+                self.s_list[i].append(0)
+    
+        for i in range(len(self.v_list1)):
+            v = self.v_list1[i]
+            a = list(self.symbol[i])
+            
+            if self.moves(v) == 8:
+                print a, ":",
+                
+            if self.moves(v) % 2 == 0:
+                player = "O"
+            else:
+                player = "X"
+            
+            for u in self.a_list1[i]:
+                j = self.a_list1[i].index(u)
+                l = self.v_list1.index(u)
+                b = self.symbol[l]
+                   
+                r = b[2]+b[1]+b[0]+b[5]+b[4]+b[3]+b[6]+b[7]+b[8] # reflection of the a board  
+                                       
+                for k in range(len(a)):
+                       
+                
+                    if a[k] == "-":
+                        a[k] = player
+                      
+                        if "".join(a) == b:
+                            self.s_list[i][j] += 1
+                            
+                        elif "".join(a) == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[8]+b[5]+b[2]:
+                            self.s_list[i][j] += 1
+                        
+                        elif "".join(a) == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]:            
+                            self.s_list[i][j] += 1
+                            
+                        elif "".join(a) == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
+                            self.s_list[i][j] += 1
+                        
+                        elif "".join(a) == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[8]+b[5]+b[2] \
+                                    or "".join(a) == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]\
+                                    or "".join(a) == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
+                            self.s_list[i][j] += 1
+                        a[k] = "-"
+                        
+                if self.moves(v) == 8:
+                    print "".join(a)," : ", self.s_list[i][j]
             
     def draw_board(self):
         #draw the primary and secondary view
@@ -663,7 +701,7 @@ class PgmeMain(object):
         for i in range(len(self.a_list1)):
              v = self.v_list1[i]
              for u in self.a_list1[i]:
-                                              
+                j= self.a_list1[i].index(u)                           
                 if self.v_list1[i].win == u.win:
                                                      
                     if self.moves(u) < self.moves(self.v_list1[i]):
@@ -674,7 +712,7 @@ class PgmeMain(object):
                        
                        x_u = u.xy[0]+(u.size)/2 
                        y_u = u.xy[1]-u.size    
-                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), max(1,int(u.sym/2)))
+                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), self.s_list[i][j])
 
 
         
