@@ -27,7 +27,7 @@ POND = (1,70,54)
 c_list_win = [(255,235,225),(225,255,235),(225,235,255)]
 c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,170,150),(150,225,170),(150,170,225)]
-c_list2 = [(240,80,55),(255,255,255),(55,80,220)]
+c_list2 = [(220,80,55),(255,255,255),(55,80,220)]
 
 factor = 1
 
@@ -40,7 +40,7 @@ class Vertex(object):
         self.bp = 0
         self.size = int(9*factor)
         self.counter = 1
-       
+        self.w = 0 #win expected value  
         
 class PgmeMain(object):
     def __init__(self):
@@ -197,7 +197,7 @@ class PgmeMain(object):
             self.minimax(self.v_list1[0], True)           
             self.reorder()
             self.symmetry()
-            
+            self.winningness()
     # Main Event handling method      
     def event_loop(self):
          while True:
@@ -559,7 +559,20 @@ class PgmeMain(object):
                             self.s_list[i][j] += 1
                         a[k] = "-"
                         
+    def winningness(self):
+        w = 0
+        for v in self.v_list:
+            i = self.v_list.index(v)
+            for u in self.a_list[i]:
+                if self.moves(u) < self.moves(v):
+                    w += u.win
+            v.w = w/self.moves(v)
             
+        
+        
+    def w_col(self,v):
+        return (170-v.w*50, 170*abs(v.w*50), 170 + w*50)
+             
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
@@ -628,6 +641,7 @@ class PgmeMain(object):
         pygame.draw.line(self.screen,(0,0,0),(x-v.size,y),(x+2*v.size,y),1)
         pygame.draw.line(self.screen,(0,0,0),(x-v.size,y+v.size),(x+2*v.size,y+v.size),1)
         
+        pygame.draw.rect(self.screen, (x-v.size,y-v.size, x+2*v.size, y+2*v.size),self.w_col(v),1)
     
     def draw_bad_edges(self):
        
