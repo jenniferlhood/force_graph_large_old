@@ -85,9 +85,13 @@ class PgmeMain(object):
         self.symbol = []
         self.s_list = [] #symmetry list
         self.win = []
-        self.row_count = Counter()
+        
+        self.load = False
         #self.levs = Counter()
         self.levs = [[],[],[],[],[],[],[],[],[],[]]
+        
+        
+        
         #after variable initialization, run the main program loop
         self.event_loop()
 
@@ -197,7 +201,12 @@ class PgmeMain(object):
     # Main Event handling method      
     def event_loop(self):
          while True:
-          
+           
+            """
+            if self.load == False:
+                self.load_data("tictactoe1.graph")
+                self.load == True
+            """    
             event = pygame.event.wait()
 
             if event.type == pygame.QUIT:
@@ -242,7 +251,7 @@ class PgmeMain(object):
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_l:
                 #glob to read files into self.load_list
                         #determine number of files, can display 20 per page
-                self.state = 2
+               # self.state = 2
                 self.load_data("tictactoe1.graph")
                 #self.load_list = glob.glob("*.graph")
               
@@ -357,7 +366,7 @@ class PgmeMain(object):
                 levelmi = [v for v in levelm if v.win == winner]
                 
                 if winner == (-1+(m % 2)) or winner == (0+(m %2)):
-                    self.row_count[m] +=len(levelmi)
+                    
                     self.levs[m] += levelmi
                 
                 for v in levelmi:
@@ -517,9 +526,7 @@ class PgmeMain(object):
             v = self.v_list1[i]
             a = list(self.symbol[i])
             
-            if self.moves(v) == 8:
-                print a, ":",
-                
+                  
             if self.moves(v) % 2 == 0:
                 player = "O"
             else:
@@ -530,34 +537,28 @@ class PgmeMain(object):
                 l = self.v_list1.index(u)
                 b = self.symbol[l]
                    
-                r = b[2]+b[1]+b[0]+b[5]+b[4]+b[3]+b[6]+b[7]+b[8] # reflection of the a board  
+                r = b[2]+b[1]+b[0]+b[5]+b[4]+b[3]+b[8]+b[7]+b[6] # reflection of the a board  
                                        
                 for k in range(len(a)):
                        
-                
+                    #check each possible play against the rotated board b and it's reflection r
+                    # increment thickness (s_list) if a play is in one of b or r
                     if a[k] == "-":
                         a[k] = player
-                      
-                        if "".join(a) == b:
-                            self.s_list[i][j] += 1
-                            
-                        elif "".join(a) == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[8]+b[5]+b[2]:
-                            self.s_list[i][j] += 1
-                        
-                        elif "".join(a) == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]:            
-                            self.s_list[i][j] += 1
-                            
-                        elif "".join(a) == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
+                                                    
+                        if "".join(a) == b\
+                                or "".join(a) == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[8]+b[5]+b[2]\
+                                or "".join(a) == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]\
+                                or "".join(a) == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
                             self.s_list[i][j] += 1
                         
-                        elif "".join(a) == b[6]+b[3]+b[0]+b[7]+b[4]+b[1]+b[8]+b[5]+b[2] \
-                                    or "".join(a) == b[8]+b[7]+b[6]+b[5]+b[4]+b[3]+b[2]+b[1]+b[0]\
-                                    or "".join(a) == b[2]+b[5]+b[8]+b[1]+b[4]+b[7]+b[0]+b[3]+b[6]:
+                        elif "".join(a) == r\
+                                    or "".join(a) == r[6]+r[3]+r[0]+r[7]+r[4]+r[1]+r[8]+r[5]+r[2]\
+                                    or "".join(a) == r[8]+r[7]+r[6]+r[5]+r[4]+r[3]+r[2]+r[1]+r[0]\
+                                    or "".join(a) == r[2]+r[5]+r[8]+r[1]+r[4]+r[7]+r[0]+r[3]+r[6]:
                             self.s_list[i][j] += 1
                         a[k] = "-"
                         
-                if self.moves(v) == 8:
-                    print "".join(a)," : ", self.s_list[i][j]
             
     def draw_board(self):
         #draw the primary and secondary view
