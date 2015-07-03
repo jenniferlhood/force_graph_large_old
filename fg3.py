@@ -38,7 +38,7 @@ class Vertex(object):
         self.parent = 0
         self.child = 0
         self.bp = 0
-        self.size = int(9*factor)
+        self.size = int(12*factor)
         self.counter = 1
         self.w = 0 #win expected value  
         
@@ -185,19 +185,20 @@ class PgmeMain(object):
                 # append parents to adjacentcy list
                 for v in self.a_list1[i]:
                     j = self.v_list1.index(v)
-                    u.child += 1
+                    #u.child += 1
                                       
                     if u not in self.a_list1[j]:
                         self.a_list1[j].append(u)
-                        v.parent += 1      
-                        
-                
-                
+                        #v.parent += 1      
+   
             self.win_loose_draw()
             self.minimax(self.v_list1[0], True)           
             self.reorder()
             self.symmetry()
             self.winningness()
+            
+            
+            
     # Main Event handling method      
     def event_loop(self):
          while True:
@@ -479,6 +480,9 @@ class PgmeMain(object):
                                  and w.win == v.win]
                      children = [w for w in self.a_list1[i] if self.moves(w) < self.moves(v)
                                     and w.win == v.win]
+                     v.child = len(children)
+                     v.parent = len(parents)
+                                    
                      if parents:
                         v.sortkey += sum([w.xy[0] for w in parents])/len(parents)
                         if not children:
@@ -506,13 +510,12 @@ class PgmeMain(object):
                     v.sortkey = v.xy[0]
     
     
-                        
-                    if v.win == 1 and 1 < self.moves(v) < 6:
-                        v.size = v.size/3
-                    elif v.win == -1 and 1 < self.moves(v) < 5:
-                        v.size = v.size/3
+                    if self.moves(v) == 6 or (v.win == -1 and self.moves(v) == 5):
+                        v.size = v.size/2    
+                    elif v.win != 0 and 1 < self.moves(v) < 6:
+                        v.size = v.size/4
                     elif 0 < self.moves(v) < 7:
-                        v.size = int((v.size+(1*factor))/2)
+                        v.size = int((v.size+(1*factor))/3)
     
     
     
@@ -558,21 +561,33 @@ class PgmeMain(object):
                                     or "".join(a) == r[2]+r[5]+r[8]+r[1]+r[4]+r[7]+r[0]+r[3]+r[6]:
                             self.s_list[i][j] += 1
                         a[k] = "-"
+     
+     
                         
     def winningness(self):
-        w = 0
-        for v in self.v_list:
-            i = self.v_list.index(v)
-            for u in self.a_list[i]:
+        
+        for v in self.v_list1:
+            w = 0
+            i = self.v_list1.index(v)
+            for u in self.a_list1[i]:
                 if self.moves(u) < self.moves(v):
                     w += u.win
-            v.w = w/self.moves(v)
+            v.w = w/max(1,self.moves(v))
             
         
+    
+    
         
     def w_col(self,v):
-        return (170-v.w*50, 170*abs(v.w*50), 170 + w*50)
-             
+        
+        if v.child == 0 or v.win !=0:
+            return (50,50,50)
+        else:
+        
+            return (int(125 - v.w*125),int(125-abs(v.w*60)), int(125 + v.w*125)) 
+        
+        
+        
     def draw_board(self):
         #draw the primary and secondary view
         rect_g1 = (0,0,self.width/3,self.height)
@@ -610,17 +625,7 @@ class PgmeMain(object):
         i = self.v_list1.index(v)
         col_dict = {"O":0,"-":1,"X":2}
         
-        """
-        size = self.size
-        
-        if v.win == 1 and 1 < self.moves(v) < 6:
-            size = self.size/3
-        elif v.win == -1 and 1 < self.moves(v) < 5:
-            size = int(3*factor)
-        elif 0 < self.moves(v) < 7:
-            size = int(5*factor)
-        """
-        
+     
         #draw player moves
         for x in [-1,0,1]:
             for y in [-1,0,1]:
@@ -636,12 +641,15 @@ class PgmeMain(object):
         x = v.xy[0]
         y = v.xy[1]
         
-        pygame.draw.line(self.screen,(0,0,0),(x,y-v.size),(x,y+2*v.size),1)
-        pygame.draw.line(self.screen,(0,0,0),(x+v.size,y-v.size),(x+v.size,y+2*v.size),1)
-        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y),(x+2*v.size,y),1)
-        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y+v.size),(x+2*v.size,y+v.size),1)
+        pygame.draw.line(self.screen,(0,0,0),(x,y-v.size),(x,y+2*v.size-1),1)
+        pygame.draw.line(self.screen,(0,0,0),(x+v.size,y-v.size),(x+v.size,y+2*v.size-1),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y),(x+2*v.size-1,y),1)
+        pygame.draw.line(self.screen,(0,0,0),(x-v.size,y+v.size),(x+2*v.size-1,y+v.size),1)
         
-        pygame.draw.rect(self.screen, (x-v.size,y-v.size, x+2*v.size, y+2*v.size),self.w_col(v),1)
+        rect = (x-v.size, y-v.size, 3*v.size, 3*v.size)
+        
+        col = self.w_col(v)
+        pygame.draw.rect(self.screen, col, rect,int(max(1,v.size/3)))
     
     def draw_bad_edges(self):
        
