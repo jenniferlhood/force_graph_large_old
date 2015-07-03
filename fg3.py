@@ -29,7 +29,7 @@ c_list = [(0,0,0),(200,200,200)]
 c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,170,150),(150,225,170),(150,170,225)]
 c_list2 = [(220,80,55),(255,255,255),(55,80,220)]
 
-factor = 1
+factor = 1 
 
 class Vertex(object):
     def __init__(self,(x,y)):
@@ -47,7 +47,7 @@ class PgmeMain(object):
 
         pygame.init()
         self.width = int(1920*factor)
-        self.height = int(1200*factor)
+        self.height = int(1100*factor)
         self.screen = pygame.display.set_mode((self.width, self.height))
     
         self.FPS = 30
@@ -502,20 +502,34 @@ class PgmeMain(object):
     
                 xblock = (winner+1)*self.width/3 \
                         + (self.width/3)/(len(levelmi)+1)
-
+                n=0
                 for v in levelmi:
-
-                    v.xy = int(xblock), int(self.height*(10-m)/11)
+                    n+=1
+                    if n % 2 == 1:
+                        if 1 < m < 5 or (m == 5 and v.win == 1):
+                            v.xy = int(xblock), int((self.height*(10-m)/11)-self.height/111)
+                        else:
+                            v.xy = int(xblock), int(self.height*(10-m)/11+self.height/111)
+                    else:
+                        v.xy = int(xblock), int(self.height*(10-m)/11+self.height/111)
+                        
+                        
+                    #v.xy = int(xblock), int(self.height*(10-m)/11)
+                    
                     xblock += (self.width/3)/(len(levelmi)+1)
                     v.sortkey = v.xy[0]
+    
+    
+    
     
     
                     if self.moves(v) == 6 or (v.win == -1 and self.moves(v) == 5):
                         v.size = v.size/2    
                     elif v.win != 0 and 1 < self.moves(v) < 6:
-                        v.size = v.size/4
+                        v.size = v.size/3
+                    
                     elif 0 < self.moves(v) < 7:
-                        v.size = int((v.size+(1*factor))/3)
+                        v.size = v.size/2
     
     
     
@@ -569,23 +583,44 @@ class PgmeMain(object):
         for v in self.v_list1:
             w = 0
             i = self.v_list1.index(v)
+            data = False
             for u in self.a_list1[i]:
                 if self.moves(u) < self.moves(v):
                     w += u.win
+                    data = True
             v.w = w/max(1,self.moves(v))
+            if not data:
+                v.w = v.win
             
         
     
     
         
     def w_col(self,v):
-        
-        if v.child == 0 or v.win !=0:
+        cols = [  (255,0,0), (255, 255, 255), (0,0,255) ]
+        #if v.child == 0: return (255, 255, 255)
+        if v.w < 0:
+            c =  [-v.w*cols[0][i] + (1+v.w)*cols[1][i] for i in [0, 1, 2]]
+        else:
+            c = [v.w*cols[2][i] + (1-v.w)*cols[1][i] for i in [0, 1, 2]]
+        return c
+
+
+    def w_col2(self,v):
+        cols = [  (255,0,0), (25, 25, 25), (0,0,255) ]
+        #if v.child == 0: return (255, 255, 255)
+        if v.w < 0:
+            c =  [-v.w*cols[0][i] + (1+v.w)*cols[1][i] for i in [0, 1, 2]]
+        else:
+            c = [v.w*cols[2][i] + (1-v.w)*cols[1][i] for i in [0, 1, 2]]
+        return c
+
+        """if v.child == 0 or v.win !=0:
             return (50,50,50)
         else:
         
             return (int(125 - v.w*125),int(125-abs(v.w*60)), int(125 + v.w*125)) 
-        
+        """
         
         
     def draw_board(self):
@@ -646,9 +681,15 @@ class PgmeMain(object):
         pygame.draw.line(self.screen,(0,0,0),(x-v.size,y),(x+2*v.size-1,y),1)
         pygame.draw.line(self.screen,(0,0,0),(x-v.size,y+v.size),(x+2*v.size-1,y+v.size),1)
         
-        rect = (x-v.size, y-v.size, 3*v.size, 3*v.size)
+        rect = pygame.Rect(x-v.size, y-v.size, 3*v.size, 3*v.size)
         
         col = self.w_col(v)
+        #pygame.draw.aalines(self.screen, col, True, 
+        #    [(rect.top, rect.left), (rect.top, rect.right), 
+        #     (rect.bottom, rect.right), (rect.bottom, rect.left)], width=int(max(1,v.size/3)))
+
+
+
         pygame.draw.rect(self.screen, col, rect,int(max(1,v.size/3)))
     
     def draw_bad_edges(self):
@@ -735,7 +776,7 @@ class PgmeMain(object):
                        
                        x_u = u.xy[0]+(u.size)/2 
                        y_u = u.xy[1]-u.size    
-                       pygame.draw.line(self.screen,col,(x_u,y_u),(x,y), self.s_list[i][j])
+                       pygame.draw.line(self.screen,self.w_col2(u),(x_u,y_u),(x,y), self.s_list[i][j])
 
 
         
