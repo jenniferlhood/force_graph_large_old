@@ -458,14 +458,14 @@ class PgmeMain(object):
                     #v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-self.height/180-v.size/2)
                     
                     
-                    if 1 < m < 5 or (m == 5 and v.win == 1):
+                    if (1 < m < 5 and v.win != 0) or (m == 5 and v.win == 1):
                         if n % 2 == 1:
-                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-self.height/170-v.size/2)
+                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/90)*self.height-self.height/170-v.size/2)
                         else:
-                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height+self.height/170-v.size/2)
+                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/90)*self.height+self.height/170-v.size/2)
                         
                     else:
-                        v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-v.size/2)
+                        v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/90)*self.height-v.size/2)
                         
                         
                     #v.xy = int(xblock), int(self.height*(10-m)/11)
@@ -627,7 +627,7 @@ class PgmeMain(object):
 
 
 
-        pygame.draw.rect(self.screen, col, rect,int(max(1,v.size/3)))
+        pygame.draw.rect(self.screen, col, rect,int(max(1,v.size/4)))
     
     def draw_bad_edges(self):
        
@@ -637,8 +637,12 @@ class PgmeMain(object):
             if m % 2 ==0: #x wins
                 
                 for v in reversed(sorted(self.levs[m], key= lambda w: w.sortkey)):
-                    n = len(self.levs[m])+15
+                    n = len(self.levs[m])+30
                     j = self.v_list1.index(v)
+                    
+                    
+                    
+                    p_length = abs((self.height*((9-m)/10 + abs(5-m)/90))-v.xy[1]+ self.height*(1/60))
                     
                     
                     step = False
@@ -648,13 +652,13 @@ class PgmeMain(object):
                             step = True
                             
                             
-                            end_x = (u.xy[0] - u.size) + (u.size*3/(u.bp+1)*u.counter)
+                            end_x = (u.xy[0] + 2*u.size) - (u.size*3/(u.bp+1)*u.counter)
                                                         
                             u.counter += 1
                                                                
                             #draw the vertical line down the the desired depth        
                             start_p = (v.xy[0]+v.size,v.xy[1])
-                            end_p = (v.xy[0]+v.size, int(v.xy[1] + v_step)+15*factor-int(n/20))
+                            end_p = (v.xy[0]+v.size, int(v.xy[1] + v_step)+p_length-int(n/7)) 
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -668,12 +672,14 @@ class PgmeMain(object):
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
                             
                     if step == True:
-                        v_step += min((1/n)*(1/12)*self.height,8*factor)
+                        v_step += min((1/n)*(1/9)*self.height,8*factor)
             
             else:
                 for v in sorted(self.levs[m], key= lambda w: w.sortkey):
                     n = len(self.levs[m])+5
                     j = self.v_list1.index(v)
+                    
+                    p_length = abs((self.height*((9-m)/10 + abs(5-m)/90))-v.xy[1]+ self.height*(1/60))
                     
                     step = False
                     for u in self.a_list1[j]:
@@ -688,7 +694,7 @@ class PgmeMain(object):
                                                             
                             #draw the vertical line down the the desired depth        
                             start_p = (v.xy[0],v.xy[1])
-                            end_p = (v.xy[0], int(v.xy[1] + v_step)+(20*factor)-int(n/15))
+                            end_p = (v.xy[0], int(v.xy[1] + v_step)+p_length-int(n/15))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -716,7 +722,7 @@ class PgmeMain(object):
             
             for u in self.a_list1[i]:
                 j = self.a_list1[i].index(u)                           
-                if v.win == u.win: #and self.moves(u) < self.moves(v):
+                if v.win == u.win and self.moves(u) < self.moves(v):
                                                  
                     
                     #col = c_list2[u.win+1]
@@ -730,10 +736,11 @@ class PgmeMain(object):
                
                     m = self.moves(v)
                     
-                    parent_length = abs((self.height*((9-m)/10 + abs(5-m)/80) + 2* v.size)-y)
+                    parent_length = abs((self.height*((9-m)/10 + abs(5-m)/90) + self.height*(1/60))-y)
                     
                     m = self.moves(u)
-                    child_length = abs((self.height*((9-m)/10 + abs(5-m)/80) - 3* u.size)-y_u)
+                    child_length = abs(self.height*((9-m)/10 + abs(5-m)/90) - self.height*(1/60) -y_u)
+                    
                     
                     
                     """
