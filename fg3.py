@@ -5,28 +5,28 @@ import time
 import glob
 
 from random import randrange, choice
-from math import sqrt,pi,sin,cos,atan
+from math import sqrt,pi,sin,cos,atan,log
 from collections import Counter
 from Queue import Queue
 from operator import attrgetter
 
 # colour globals
-LAV = (100,100,200)
-PEA = (100,200,100)
-CORAL = (200,100,100)
+#LAV = (100,100,200)
+#PEA = (100,200,100)
+#CORAL = (200,100,100)
 
-AQUA = (100,200,200)
-ROSE = (200,100,200)
-SUN = (200,200,100)
+#AQUA = (100,200,200)
+#ROSE = (200,100,200)
+#SUN = (200,200,100)
 
-GOOSE = (100,100,100)
+#GOOSE = (100,100,100)
 CHALK = (200,200,200)
 
-POND = (1,70,54)
+#POND = (1,70,54)
 
-c_list_win = [(255,235,225),(225,255,235),(225,235,255)]
+c_list_win = [(255,245,240),(240,255,245),(240,245,255)]
 c_list = [(0,0,0),(200,200,200)]
-c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,170,150),(150,225,170),(150,170,225)]
+c_list1 = [(200,55,35),(35,200,55),(35,55,200),(225,180,170),(170,225,180),(170,180,225)]
 c_list2 = [(220,80,55),(255,255,255),(55,80,220)]
 
 factor = 1 
@@ -87,7 +87,7 @@ class PgmeMain(object):
         self.win = []
         
         self.load = False
-        #self.levs = Counter()
+        
         self.levs = [[],[],[],[],[],[],[],[],[],[]]
         
         
@@ -97,11 +97,7 @@ class PgmeMain(object):
 
 
 
-    #Methods assisiting with program function
-    #
-    #
-    #returns a list with the number of vertices and edges in g1 and in g2
-    # in this order: [v_g1,e_g1,v_g2,e_g2]
+    
     def count_v_and_e(self):
         v1 = len(self.v_list1)
         e1 = len(reduce(lambda x,y: x + y, self.a_list1,[]))
@@ -212,43 +208,7 @@ class PgmeMain(object):
 
             if event.type == pygame.QUIT:
                 sys.exit()
-                """
-            elif event.type == pygame.MOUSEMOTION:
-                pos = event.pos
-                for i in range(len(self.v_list1)):
-                    u = self.v_list1[i]
-                    
-                    if (u.xy[0]-pos[0])**2 + (u.xy[1]-pos[1])**2 < 9:
-                        print "========"
-                        print self.symbol[i][0:3]    
-                        print self.symbol[i][3:6]
-                        print self.symbol[i][6:9]   
-                        print "========"
-        
-                 
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
-             
-                    self.v_list1 = []
-                    self.a_list1 = []
-                    self.zoom_list=0
-         
 
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                tm = time.localtime(time.time())
-                self.timer = time.time()
-                
-                filename = str(tm.tm_year) + "_" + str(tm.tm_mon) + "_" + \
-                                    str(tm.tm_mday) + "_" + str(tm.tm_hour) + \
-                                    str(tm.tm_min) + str(tm.tm_sec)+".graph"
-
-                f = open(filename,"w")
-                f.write(str(self.count_v_and_e()) + "\n")
-                f.write(str(self.v_list_coordinates(self.v_list1)) + "\n")
-                f.write(str(self.v_list_index(self.v_list1,self.a_list1)) + "\n")
-
-                f.close()
-                self.state = 1
-                """
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_l:
                 #glob to read files into self.load_list
                         #determine number of files, can display 20 per page
@@ -369,7 +329,7 @@ class PgmeMain(object):
                 if winner == (-1+(m % 2)) or winner == (0+(m %2)):
                     
                     self.levs[m] += levelmi
-                
+                  
                 for v in levelmi:
                     i = self.v_list1.index(v) # Ack!
                     parents = [w for w in self.a_list1[i] 
@@ -403,11 +363,7 @@ class PgmeMain(object):
                                 v.sortkey = -2**20
                         else:
                             v.sortkey = -v.win * 2**20
-                        #    v.sortkey = -v.win * (len(children)+1)**20
-                           
-                                                        
-                            
-    
+                       
                             
                 # Bad - Omega(n^2log n) time algorithm in here.
                 # levelmi = sorted(levelmi, key=lambda v: \
@@ -429,16 +385,7 @@ class PgmeMain(object):
                     
                     
         print "player wins", wins
-        print "fatal moves 1=X, 0=O", fatal  
-        
-        
-        
-        
-        
-        
-        
-        
-        
+  
         for m in range(10):
             levelm = [v for v in self.v_list1 if self.moves(v) == m]
                  
@@ -502,16 +449,23 @@ class PgmeMain(object):
     
                 xblock = (winner+1)*self.width/3 \
                         + (self.width/3)/(len(levelmi)+1)
-                n=0
+                n = 0
                 for v in levelmi:
                     n+=1
-                    if n % 2 == 1:
-                        if 1 < m < 5 or (m == 5 and v.win == 1):
-                            v.xy = int(xblock), int((self.height*(10-m)/11)-self.height/111)
+                    v.size = int(v.size/max(1,(log(len(levelmi)*3/10)-factor/3)))
+                    
+                   
+                    #v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-self.height/180-v.size/2)
+                    
+                    
+                    if 1 < m < 5 or (m == 5 and v.win == 1):
+                        if n % 2 == 1:
+                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-self.height/170-v.size/2)
                         else:
-                            v.xy = int(xblock), int(self.height*(10-m)/11+self.height/111)
+                            v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height+self.height/170-v.size/2)
+                        
                     else:
-                        v.xy = int(xblock), int(self.height*(10-m)/11+self.height/111)
+                        v.xy = int(xblock), int((self.height*(9-m)/10)+(abs(5-m)/80)*self.height-v.size/2)
                         
                         
                     #v.xy = int(xblock), int(self.height*(10-m)/11)
@@ -520,19 +474,9 @@ class PgmeMain(object):
                     v.sortkey = v.xy[0]
     
     
+                   
     
-    
-    
-                    if self.moves(v) == 6 or (v.win == -1 and self.moves(v) == 5):
-                        v.size = v.size/2    
-                    elif v.win != 0 and 1 < self.moves(v) < 6:
-                        v.size = v.size/3
-                    
-                    elif 0 < self.moves(v) < 7:
-                        v.size = v.size/2
-    
-    
-    
+ 
     def symmetry(self):
         for i in range(len(self.v_list1)):
             self.s_list.append([])
@@ -597,7 +541,7 @@ class PgmeMain(object):
     
         
     def w_col(self,v):
-        cols = [  (255,0,0), (255, 255, 255), (0,0,255) ]
+        cols = [  (255,0,0), (200, 200, 200), (0,0,255) ]
         #if v.child == 0: return (255, 255, 255)
         if v.w < 0:
             c =  [-v.w*cols[0][i] + (1+v.w)*cols[1][i] for i in [0, 1, 2]]
@@ -607,7 +551,7 @@ class PgmeMain(object):
 
 
     def w_col2(self,v):
-        cols = [  (255,0,0), (25, 25, 25), (0,0,255) ]
+        cols = [  (240,0,0), (80, 80, 80), (0,0,240) ]
         #if v.child == 0: return (255, 255, 255)
         if v.w < 0:
             c =  [-v.w*cols[0][i] + (1+v.w)*cols[1][i] for i in [0, 1, 2]]
@@ -615,13 +559,6 @@ class PgmeMain(object):
             c = [v.w*cols[2][i] + (1-v.w)*cols[1][i] for i in [0, 1, 2]]
         return c
 
-        """if v.child == 0 or v.win !=0:
-            return (50,50,50)
-        else:
-        
-            return (int(125 - v.w*125),int(125-abs(v.w*60)), int(125 + v.w*125)) 
-        """
-        
         
     def draw_board(self):
         #draw the primary and secondary view
@@ -697,22 +634,27 @@ class PgmeMain(object):
        
         for m in reversed(range(10)):
             v_step = int(15*factor)
-            if m % 2 ==0:
+            if m % 2 ==0: #x wins
                 
                 for v in reversed(sorted(self.levs[m], key= lambda w: w.sortkey)):
-                    n = len(self.levs[m])
+                    n = len(self.levs[m])+15
                     j = self.v_list1.index(v)
-                    v_step += min((1/n)*(1/15)*self.height,10)
+                    
+                    
+                    step = False
                     for u in self.a_list1[j]:
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
+                            step = True
                             
-                            end_x = (u.xy[0]-u.size)+((u.bp-u.counter+(1/max(1,(u.bp-1))))*u.size)
+                            
+                            end_x = (u.xy[0] - u.size) + (u.size*3/(u.bp+1)*u.counter)
+                                                        
                             u.counter += 1
                                                                
                             #draw the vertical line down the the desired depth        
                             start_p = (v.xy[0]+v.size,v.xy[1])
-                            end_p = (v.xy[0]+v.size, int(v.xy[1] + v_step))
+                            end_p = (v.xy[0]+v.size, int(v.xy[1] + v_step)+15*factor-int(n/20))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -724,26 +666,29 @@ class PgmeMain(object):
                             start_c = end_c
                             end_c = (end_x,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
+                            
+                    if step == True:
+                        v_step += min((1/n)*(1/12)*self.height,8*factor)
             
             else:
                 for v in sorted(self.levs[m], key= lambda w: w.sortkey):
-                    n = len(self.levs[m])
+                    n = len(self.levs[m])+5
                     j = self.v_list1.index(v)
                     
-                    v_step += min((1/n)*(1/15)*self.height,10)
+                    step = False
                     for u in self.a_list1[j]:
                         
                         col = c_list1[u.win+4] 
                         if self.moves(u) < self.moves(v) and u.win != v.win:
-                            
+                            step = True
                             #calculate coordinate for edge connecting with child vertex
                             
-                            end_x = (u.xy[0]-u.size)+((u.counter-1+(1/max(1,(u.bp-1))))*u.size)
+                            end_x = (u.xy[0] - u.size) + (u.size*3/(u.bp+1)*u.counter)
                             u.counter += 1
                                                             
                             #draw the vertical line down the the desired depth        
                             start_p = (v.xy[0],v.xy[1])
-                            end_p = (v.xy[0], int(v.xy[1] + v_step))
+                            end_p = (v.xy[0], int(v.xy[1] + v_step)+(20*factor)-int(n/15))
                             pygame.draw.line(self.screen,col,start_p,end_p,int(factor))
                             
                             #draw the horizontal line across to the child vertex
@@ -755,29 +700,72 @@ class PgmeMain(object):
                             start_c = end_c
                             end_c = (end_x,u.xy[1])
                             pygame.draw.line(self.screen,col,start_c,end_c,int(factor))
-
-
+                    
+                    if step == True:
+                        v_step += min((1/n)*(1/12)*self.height,8*factor)
+        
     def draw_graphs(self):
  
         self.draw_bad_edges()
         
         #draw the edges perfect plays
-        for i in range(len(self.a_list1)):
-             v = self.v_list1[i]
-             for u in self.a_list1[i]:
-                j= self.a_list1[i].index(u)                           
-                if self.v_list1[i].win == u.win:
-                                                     
-                    if self.moves(u) < self.moves(self.v_list1[i]):
-                       #col = c_list2[u.win+1]
-                       col = c_list[0] 
-                       x = v.xy[0]+(v.size)/2
-                       y = v.xy[1]+2*v.size 
-                       
-                       x_u = u.xy[0]+(u.size)/2 
-                       y_u = u.xy[1]-u.size    
-                       pygame.draw.line(self.screen,self.w_col2(u),(x_u,y_u),(x,y), self.s_list[i][j])
-
+             
+        for i in range(len(self.v_list1)):
+            v = self.v_list1[i]  
+            n = 0 
+            
+            for u in self.a_list1[i]:
+                j = self.a_list1[i].index(u)                           
+                if v.win == u.win: #and self.moves(u) < self.moves(v):
+                                                 
+                    
+                    #col = c_list2[u.win+1]
+                    col = c_list[0] 
+                    x = v.xy[0]+(v.size)/2
+                    y = v.xy[1]+2*v.size 
+               
+                    x_u = u.xy[0]+(u.size)/2 
+                    y_u = u.xy[1]-u.size    
+               
+               
+                    m = self.moves(v)
+                    
+                    parent_length = abs((self.height*((9-m)/10 + abs(5-m)/80) + 2* v.size)-y)
+                    
+                    m = self.moves(u)
+                    child_length = abs((self.height*((9-m)/10 + abs(5-m)/80) - 3* u.size)-y_u)
+                    
+                    
+                    """
+                    if 1 < m < 5:
+                        # or (m == 5 and v.win == 1):
+                        if n % 2 == 1:
+                            parent_length = self.height*(1/100)
+                    
+                    
+                    
+                    else:
+                        child_length = self.height*(1/100)
+                    
+                    """
+                    #pygame.draw.line(self.screen,self.w_col2(u),(x_u,y_u),(x,y), self.s_list[i][j])
+                    
+                   
+                    #draw a line straight down 
+                    start_p = (x,y)
+                    end_p = (x,y + parent_length)
+                    pygame.draw.line(self.screen,self.w_col2(u),start_p, end_p, self.s_list[i][j])
+                   
+                    #draw a diagonal across to child
+                    start_p = end_p
+                    end_p = (x_u, y_u - child_length)
+                    pygame.draw.line(self.screen,self.w_col2(u),start_p, end_p, self.s_list[i][j])
+                   
+                    #draw a line down to child
+                    start_p = end_p
+                    end_p = (x_u, y_u) 
+                    pygame.draw.line(self.screen,self.w_col2(u),start_p, end_p, self.s_list[i][j])
+                   
 
         
         #draw the vertices,
